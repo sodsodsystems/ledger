@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Ledger — Personal Finance Tracker</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23007AFF' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6'/></svg>">
+<meta name="description" content="Ledger is a secure, cloud-synced personal finance tracker.">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+<!-- Libraries -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════
+     AUTH SCREEN (Ian & Allan Shared Vault)
+═══════════════════════════════════════════ -->
+<div id="auth-screen">
+  <div class="auth-card">
+    <div class="auth-logo">₤</div>
+    
+    <div id="login-view">
+      <h2 class="auth-title">Welcome Back</h2>
+      <p class="auth-sub">Enter your vault name and master key</p>
+      
+      <div class="form-group" style="text-align:left; margin-bottom:16px;">
+        <label class="form-label">Username</label>
+        <input type="text" class="form-input" id="loginUser" placeholder="e.g. IAN" style="background:var(--bg-base); text-transform:uppercase;">
+      </div>
+
+      <div class="form-group" style="text-align:left; margin-bottom:20px;">
+        <label class="form-label">Password</label>
+        <input type="password" class="form-input" id="loginPassword" placeholder="••••••••" style="background:var(--bg-base)">
+      </div>
+
+      <button class="btn btn-primary" style="width:100%; padding:12px;" onclick="handleLogin()">Unlock Vault</button>
+      
+      <p style="margin-top:24px; font-size:12px; color:var(--text-muted); line-height:1.5;">
+        Private Shared Vault by Ledger.<br>
+        <span style="color:var(--text-secondary)">Your data is synced and secure.</span>
+      </p>
+    </div>
+  </div>
+</div>
+
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()" aria-hidden="true"></div>
+
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-icon">₤</div>
+    <span class="logo-text">Led<span>ger</span></span>
+  </div>
+  <nav>
+    <div class="nav-section-label">Overview</div>
+    <button class="nav-item active" data-view="dashboard">
+      <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="6" height="6" rx="1.5"/><rect x="14" y="4" width="6" height="6" rx="1.5"/><rect x="4" y="14" width="6" height="6" rx="1.5"/><rect x="14" y="14" width="6" height="6" rx="1.5"/></svg></span> Dashboard
+    </button>
+    <button class="nav-item" data-view="transactions">
+      <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 7h10"/><path d="M7 12h10"/><path d="M7 17h6"/><path d="M5 7h.01M5 12h.01M5 17h.01"/></svg></span> Transactions
+    </button>
+
+    <div class="nav-section-label" style="margin-top:8px;">Planning</div>
+    <button class="nav-item" data-view="budget">
+      <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="9" opacity="0.25"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3"/></svg></span> Budget
+    </button>
+    <button class="nav-item" data-view="reports">
+      <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 17l4-4 4 4 6-6"/><path d="M5 21h14"/></svg></span> Reports
+    </button>
+  </nav>
+  <div class="sidebar-footer">
+    <button class="export-btn" onclick="exportToExcel()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;"><path d="M12 4v10"/><path d="M8 10l4 4 4-4"/><path d="M6 18h12"/></svg> Export Data
+    </button>
+  </div>
+</aside>
+
+<main class="main">
+  <header class="topbar">
+    <div class="hamburger" id="hamburgerBtn" onclick="toggleSidebar()" aria-label="Toggle navigation menu" aria-expanded="false" aria-controls="sidebar">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+    </div>
+    <div>
+      <h1 class="topbar-title" id="viewTitle">Dashboard</h1>
+      <p class="topbar-sub" id="viewSub">Financial overview</p>
+    </div>
+    <div class="topbar-right">
+        <select class="month-select" id="filterMonth">
+            <option value="all">All Time</option>
+        </select>
+        <button class="btn btn-primary" onclick="openModal()">+ Add Transaction</button>
+        <button class="logout-btn" onclick="logout()">Logout</button>
+    </div>
+  </header>
+
+  <div class="content">
+    <!-- DASHBOARD VIEW -->
+    <section id="view-dashboard" class="view">
+        <div class="dashboard-header">
+            <h2 class="dashboard-greeting" id="dashboardGreeting">Welcome!</h2>
+            <p class="dashboard-sub">Here's how your finances look today.</p>
+        </div>
+        
+        <div class="kpi-grid">
+            <div class="kpi-card">
+              <div><div class="kpi-label">Total Income</div><div class="kpi-value mono text-green" id="kpiIncome">₱0.00</div></div>
+              <div class="kpi-change neutral" id="kpiIncomeChange">0 entries</div>
+              <div class="kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 6l-9.5 9.5-5-5L1 18"/><path d="M17 6h6v6"/></svg></div>
+            </div>
+            <div class="kpi-card">
+              <div><div class="kpi-label">Total Expenses</div><div class="kpi-value mono text-red" id="kpiExpenses">₱0.00</div></div>
+              <div class="kpi-change neutral" id="kpiExpensesChange">0 entries</div>
+              <div class="kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 18l-9.5-9.5-5 5L1 6"/><path d="M17 18h6v-6"/></svg></div>
+            </div>
+            <div class="kpi-card">
+              <div><div class="kpi-label">Net Balance</div><div class="kpi-value mono" id="kpiBalance">₱0.00</div></div>
+              <div class="kpi-change neutral">income – expenses</div>
+              <div class="kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12h-4l-3 9L7 3l-3 9H3"/></svg></div>
+            </div>
+            <div class="kpi-card">
+              <div><div class="kpi-label">Savings Rate</div><div class="kpi-value mono" id="kpiSavings">0%</div></div>
+              <div class="kpi-change neutral" id="kpiTxCount">0 transactions</div>
+              <div class="kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 5c-1.5 0-2.8 1.4-3 3-3.5-1.5-11 3-11 3s5.1 3.2 5.6 8c0 .3.1.5.4.5h.2c1.3 0 2.6-1 3-2.2.5 1.2 1.8 2.2 3.1 2.2h.1c.3 0 .4-.2.4-.5 1-4.9 5.7-8 5.7-8s-3.9-3-5.5-3z"/><circle cx="14" cy="9" r="1"/></svg></div>
+            </div>
+        </div>
+
+        <div class="charts-row">
+            <div class="card">
+              <div class="card-header"><div class="card-title">Monthly Cash Flow</div><div class="card-sub">Income vs expenses over time</div></div>
+              <div style="height:300px; position:relative;"><canvas id="cashflowChart"></canvas></div>
+            </div>
+            <div class="card">
+              <div class="card-header"><div class="card-title">Spending by Category</div><div class="card-sub">Top expense categories</div></div>
+              <div style="height:220px; position:relative; margin-bottom:20px;"><canvas id="pieChart"></canvas></div>
+              <div id="catLegend"></div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header"><div class="card-title">Recent Transactions</div><button class="btn btn-ghost" onclick="navigate('transactions')">View All</button></div>
+            <div id="recentTxList" class="tx-list"></div>
+        </div>
+    </section>
+
+    <!-- TRANSACTIONS VIEW -->
+    <section id="view-transactions" class="view">
+        <div class="tx-controls">
+            <input type="text" class="search-input" id="searchInput" placeholder="Search by description, category or tag...">
+            <select class="filter-select" id="typeFilter">
+              <option value="all">All Types</option>
+              <option value="income">Income</option>
+              <option value="expense">Expense</option>
+            </select>
+            <select class="filter-select" id="catFilter">
+              <option value="all">All Categories</option>
+            </select>
+            <select class="filter-select" id="sortFilter">
+              <option value="date-desc">Newest First</option>
+              <option value="date-asc">Oldest First</option>
+              <option value="amount-desc">Highest Amount</option>
+              <option value="amount-asc">Lowest Amount</option>
+            </select>
+        </div>
+        
+        <div class="card" style="padding:0; overflow:hidden;">
+            <table class="tx-table">
+              <thead>
+                <tr>
+                  <th style="width:40px"></th>
+                  <th style="width:110px">Date</th>
+                  <th>Description</th>
+                  <th>Category</th>
+                  <th>Payment</th>
+                  <th>Notes</th>
+                  <th style="text-align:right;">Amount</th>
+                  <th style="text-align:center; width:80px">Action</th>
+                </tr>
+              </thead>
+              <tbody id="txTableBody"></tbody>
+            </table>
+            <div id="txEmptyState" class="empty-state" style="display:none;">
+              <h3>No transactions found</h3>
+              <p>Try adjusting your filters or add a new record.</p>
+            </div>
+        </div>
+        <div style="margin-top:20px; display:flex; justify-content:space-between; align-items:center; padding:0 10px;">
+            <div id="txCount" class="text-muted" style="font-size:12px;"></div>
+            <div id="txTotal" class="fw-600" style="font-size:15px;"></div>
+        </div>
+    </section>
+
+    <!-- BUDGET VIEW -->
+    <section id="view-budget" class="view">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+            <p class="text-secondary">Track and limit your monthly spending by category.</p>
+            <button class="btn btn-primary" onclick="openBudgetModal()">Set New Budget</button>
+        </div>
+        <div id="budgetGrid" class="budget-grid"></div>
+        <div id="budgetEmpty" class="empty-state" style="display:none;">
+            <h3>No budgets set yet</h3>
+            <p>Define spending limits to stay on top of your financial goals.</p>
+        </div>
+    </section>
+
+    <!-- REPORTS VIEW -->
+    <section id="view-reports" class="view">
+        <div class="reports-grid" style="margin-bottom:24px;">
+            <div class="card">
+              <div class="card-header"><div class="card-title">Financial Trends</div><div class="card-sub">Income vs Expenses (Last 6 Months)</div></div>
+              <div style="height:260px; position:relative;"><canvas id="trendChart"></canvas></div>
+            </div>
+            <div class="card">
+              <div class="card-header"><div class="card-title">Expense Distribution</div><div class="card-sub">Breakdown by percentage</div></div>
+              <div style="height:260px; position:relative;"><canvas id="reportPieChart"></canvas></div>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-header"><div class="card-title">Monthly Summary Table</div></div>
+            <table class="tx-table" style="margin-top:10px;">
+              <thead>
+                <tr>
+                  <th>Month</th>
+                  <th style="text-align:right;">Income</th>
+                  <th style="text-align:right;">Expenses</th>
+                  <th style="text-align:right;">Net</th>
+                  <th style="text-align:right;">Savings %</th>
+                  <th style="text-align:right;">Count</th>
+                </tr>
+              </thead>
+              <tbody id="summaryBody"></tbody>
+            </table>
+        </div>
+    </section>
+  </div>
+</main>
+
+<!-- MODALS -->
+<div class="modal-overlay" id="txModal">
+  <div class="modal">
+    <div class="modal-title">
+      <span id="modalTitle">Add Transaction</span>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="form-grid">
+      <div class="form-group form-full">
+        <label class="form-label">Type</label>
+        <div class="type-toggle">
+          <input type="radio" name="txType" id="typeExpense" value="expense" checked>
+          <label for="typeExpense" class="expense-label">Expense</label>
+          <input type="radio" name="txType" id="typeIncome" value="income">
+          <label for="typeIncome" class="income-label">Income</label>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Date</label>
+        <input type="date" class="form-input" id="txDate">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Amount (₱)</label>
+        <input type="number" class="form-input" id="txAmount" placeholder="0.00" step="0.01">
+      </div>
+      <div class="form-group form-full">
+        <label class="form-label">Description</label>
+        <input type="text" class="form-input" id="txDesc" placeholder="What was this for?">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Category</label>
+        <select class="form-select" id="txCat"></select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Subcategory</label>
+        <select class="form-select" id="txSubcat"></select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Payment Method</label>
+        <select class="form-select" id="txPayment">
+          <option value="Cash">Cash</option>
+          <option value="GCash">GCash</option>
+          <option value="Maya">Maya</option>
+          <option value="Credit Card">Credit Card</option>
+          <option value="Debit Card">Debit Card</option>
+          <option value="Bank Transfer">Bank Transfer</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Tags (Optional)</label>
+        <input type="text" class="form-input" id="txTags" placeholder="e.g. travel, food, recurring">
+      </div>
+      <div class="form-group form-full">
+        <label class="form-label">Notes</label>
+        <textarea class="form-textarea" id="txNotes" placeholder="Additional details..."></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveTransaction()">Save Transaction</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="budgetModal">
+  <div class="modal" style="width:420px;">
+    <div class="modal-title">
+      Set Budget Limit
+      <button class="modal-close" onclick="closeBudgetModal()">✕</button>
+    </div>
+    <div class="form-grid" style="grid-template-columns:1fr;">
+      <div class="form-group">
+        <label class="form-label">Category</label>
+        <select class="form-select" id="budgetCat"></select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Monthly Budget (₱)</label>
+        <input type="number" class="form-input" id="budgetAmount" placeholder="0.00" min="0" step="1">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeBudgetModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveBudget()">Save Budget</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- App Config -->
+<script src="js/config.js"></script>
+<!-- App Scripts -->
+<script type="module" src="js/app.js"></script>
+</body>
+</html>

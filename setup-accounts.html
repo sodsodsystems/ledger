@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Account Setup Helper</title>
+  <style>
+    body { font-family: -apple-system, sans-serif; background: #000; color: #fff; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; }
+    .card { background: #1c1c1e; border: 1px solid #2c2c2e; border-radius: 16px; padding: 32px; min-width: 400px; text-align: center; }
+    h2 { margin: 0 0 8px; font-size: 20px; }
+    p { color: #8e8e93; font-size: 14px; margin: 0 0 24px; }
+    button { background: #007aff; color: #fff; border: none; border-radius: 12px; padding: 14px 32px; font-size: 15px; font-weight: 600; cursor: pointer; width: 100%; }
+    button:hover { background: #0081ff; }
+    .status { margin-top: 20px; padding: 12px; border-radius: 10px; font-size: 14px; display: none; }
+    .status.ok { background: rgba(50,215,75,0.15); color: #32d74b; display: block; }
+    .status.err { background: rgba(255,69,58,0.15); color: #ff453a; display: block; }
+  </style>
+</head>
+<body>
+<div class="card">
+  <h2>Account Setup Helper</h2>
+  <p>This will create encrypted vaults for IAN and ALLAN with the specified passwords. Open <strong>finance-tracker.html</strong> after this completes.</p>
+  <button onclick="setup()">Create Accounts</button>
+  <div class="status" id="status"></div>
+</div>
+
+<script>
+const CRYPTO_CONFIG = { algo: 'AES-GCM', kdf: 'PBKDF2', hash: 'SHA-256', iterations: 100000, keyLen: 256 };
+
+async function deriveKey(password, salt) {
+  const enc = new TextEncoder();
+  const pwKey = await crypto.subtle.importKey('raw', enc.encode(password), { name: CRYPTO_CONFIG.kdf }, false, ['deriveBits', 'deriveKey']);
+  return await crypto.subtle.deriveKey(
+    { name: CRYPTO_CONFIG.kdf, salt, iterations: CRYPTO_CONFIG.iterations, hash: CRYPTO_CONFIG.hash },
+    pwKey,
+    { name: CRYPTO_CONFIG.algo, length: CRYPTO_CONFIG.keyLen },
+    false, ['encrypt', 'decrypt']
+  );
+}
+
+async function createVault(username, password) {
+  const salt = crypto.getRandomValues(new Uint8Array(16));
+  const key = await deriveKey(password, salt);
+  const data = { transactions: [], budgets: {}, editId: null };
+  
+  const enc = new TextEncoder();
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const encrypted = await crypto.subtle.encrypt({ name: CRYPTO_CONFIG.algo, iv }, key, enc.encode(JSON.stringify(data)));
+  
+  const combined = new Uint8Array(iv.length + salt.length + encrypted.byteLength);
+  combined.set(iv);
+  combined.set(salt, iv.length);
+  combined.set(new Uint8Array(encrypted), iv.length + salt.length);
+  
+  const b64 = btoa(String.fromCharCode.apply(null, combined));
+  localStorage.setItem(`ledger_vault_${username}`, b64);
+}
+
+async function setup() {
+  const btn = document.querySelector('button');
+  const status = document.getElementById('status');
+  btn.disabled = true;
+  btn.textContent = 'Creating vaults...';
+  status.className = 'status';
+  
+  try {
+    // Clear any old data
+    localStorage.removeItem('ledger_vault_IAN');
+    localStorage.removeItem('ledger_vault_LAN');
+    localStorage.removeItem('ledger_vault_ALLAN');
+    
+    // Set user list
+    localStorage.setItem('ledger_users', JSON.stringify(['IAN', 'ALLAN']));
+    localStorage.setItem('legacy_cleared_v2', 'true');
+    
+    // Create vaults
+    await createVault('IAN', 'iloveallan');
+    await createVault('ALLAN', 'iloveian');
+    
+    status.className = 'status ok';
+    status.textContent = '✓ Done! IAN (iloveallan) and ALLAN (iloveian) are ready. Open finance-tracker.html to log in.';
+    btn.textContent = 'Done!';
+  } catch (e) {
+    status.className = 'status err';
+    status.textContent = '✗ Error: ' + e.message;
+    btn.disabled = false;
+    btn.textContent = 'Retry';
+  }
+}
+</script>
+</body>
+</html>
