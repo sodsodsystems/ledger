@@ -1,75 +1,66 @@
-import { Store } from './store.js';
 import { Auth } from './auth.js';
 
 export const DB = {
-  async getUserData() {
+  // Each user gets their own key in localStorage: ledger_db_IAN, ledger_db_ALLAN
+  async getUserStorageKey() {
     const user = await Auth.getCurrentUser();
-    if (!user) return null;
-    
-    // Ensure store is initialized with config
-    Store.init(window.LEDGER_CONFIG.GITHUB_TOKEN, window.LEDGER_CONFIG.GITHUB_REPO);
-    
-    const db = await Store.getDb();
-    if (!db.content.users) db.content.users = {};
-    if (!db.content.users[user.name]) {
-        db.content.users[user.name] = { transactions: [], budgets: {} };
-    }
-    return { data: db.content.users[user.name], sha: db.sha, fullContent: db.content };
+    return user ? `ledger_db_${user.name}` : null;
+  },
+
+  async getData() {
+    const key = await this.getUserStorageKey();
+    if (!key) return { transactions: [], budgets: {} };
+    const raw = localStorage.getItem(key);
+    return raw ? JSON.parse(raw) : { transactions: [], budgets: {} };
+  },
+
+  async saveData(data) {
+    const key = await this.getUserStorageKey();
+    if (key) localStorage.setItem(key, JSON.stringify(data));
   },
 
   async getTransactions() {
-    const res = await this.getUserData();
-    return res ? res.data.transactions : [];
+    const data = await this.getData();
+    return data.transactions || [];
   },
 
   async saveTransaction(tx) {
-    const user = await Auth.getCurrentUser();
-    const res = await this.getUserData();
-    if (!res) throw new Error("Not logged in");
+    const data = await this.getData();
+    if (!data.transactions) data.transactions = [];
 
-    let txs = res.data.transactions;
     if (tx.id) {
-      const idx = txs.findIndex(t => t.id === tx.id);
-      if (idx > -1) txs[idx] = { ...txs[idx], ...tx };
+      const idx = data.transactions.findIndex(t => t.id === tx.id);
+      if (idx > -1) data.transactions[idx] = { ...data.transactions[idx], ...tx };
     } else {
       tx.id = Date.now().toString(36) + Math.random().toString(36).slice(2);
-      txs.push(tx);
+      data.transactions.push(tx);
     }
 
-    res.fullContent.users[user.name].transactions = txs;
-    await Store.saveDb(res.fullContent, res.sha);
+    await this.saveData(data);
     return tx;
   },
 
   async deleteTransaction(id) {
-    const user = await Auth.getCurrentUser();
-    const res = await this.getUserData();
-    if (!res) return;
-
-    res.fullContent.users[user.name].transactions = res.data.transactions.filter(t => t.id !== id);
-    await Store.saveDb(res.fullContent, res.sha);
+    const data = await this.getData();
+    data.transactions = data.transactions.filter(t => t.id !== id);
+    await this.saveData(data);
   },
 
   async getBudgets() {
-    const res = await this.getUserData();
-    return res ? res.data.budgets : {};
+    const data = await this.getData();
+    return data.budgets || {};
   },
 
   async saveBudget(category, limit) {
-    const user = await Auth.getCurrentUser();
-    const res = await this.getUserData();
-    if (!res) return;
-
-    res.fullContent.users[user.name].budgets[category] = limit;
-    await Store.saveDb(res.fullContent, res.sha);
+    const data = await this.getData();
+    if (!data.budgets) data.budgets = {};
+    data.budgets[category] = limit;
+    await this.saveData(data);
   },
 
   async deleteBudget(category) {
-    const user = await Auth.getCurrentUser();
-    const res = await this.getUserData();
-    if (!res) return;
-
-    delete res.fullContent.users[user.name].budgets[category];
-    await Store.saveDb(res.fullContent, res.sha);
+    const data = await this.getData();
+    if (data.budgets) delete data.budgets[category];
+    await this.saveData(data);
   }
 };

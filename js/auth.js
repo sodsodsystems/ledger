@@ -1,18 +1,20 @@
-import { Store } from './store.js';
-
 export const Auth = {
-  // These are the credentials provided by the user
-  DEFAULT_USERS: {
-    "IAN": "iloveallan",
-    "ALLAN": "iloveian"
-  },
-
   async login(username, password) {
-    const userKey = username.toUpperCase();
-    if (this.DEFAULT_USERS[userKey] === password) {
+    try {
+      const res = await fetch('users.json');
+      if (!res.ok) throw new Error("Could not load users.json");
+      const data = await res.json();
+      
+      const userKey = username.toUpperCase();
+      const user = data.users[userKey];
+
+      if (user && user.password === password) {
         const session = { name: userKey, loginAt: Date.now() };
         localStorage.setItem('ledger_session', JSON.stringify(session));
         return session;
+      }
+    } catch (e) {
+      console.error(e);
     }
     throw new Error("Invalid Username or Password");
   },

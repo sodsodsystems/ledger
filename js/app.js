@@ -17,7 +17,7 @@ const CATEGORIES = {
   },
   expense: {
     "Housing": ["Rent / Mortgage", "Electric Bill", "Water Bill", "Internet & Cable", "Gas (LPG/Cooking)", "Property Tax", "Home Insurance", "HOA Dues", "Maintenance & Repairs", "Home Improvement"],
-    "Food & Dining": ["Groceries & Supermarket", "Restaurants & Dining Out", "Coffee & Beverages", "Takeout & Food Delivery", "Work Lunches", "Snacks & Street Food"],
+    "Food & Dining": ["Groceries & Supermarket", "Restaurants & Dining Out", "Coffee & Beverages", "Takeout & Food Delivery", "Work Lunches", "Snacks & Food Truck", "Street Food"],
     "Transportation": ["Gas & Fuel", "Car Payment (Amortization)", "Auto Insurance", "Vehicle Registration", "Jeepney / Bus / Tricycle", "MRT / LRT", "Grab / Ride-hailing", "Parking Fees", "Car Maintenance & Repair", "Toll Fees"],
     "Healthcare": ["Health Insurance (HMO)", "Doctor / Clinic Visits", "Prescription Medications", "Over-the-counter Meds", "Dental Care", "Vision Care & Eyeglasses", "Mental Health / Therapy", "Laboratory & Diagnostics", "Hospital Bills"],
     "Personal Care": ["Clothing & Apparel", "Footwear", "Haircut & Salon", "Skincare & Beauty Products", "Gym & Fitness Membership", "Personal Hygiene Products"],
@@ -31,7 +31,7 @@ const CATEGORIES = {
     "Children & Family": ["Childcare & Daycare", "School Allowance", "Baby & Toddler Supplies", "Kids' Activities & Toys", "Pet Food & Veterinary", "Family Support / Remittance"],
     "Business Expenses": ["Office Supplies", "Professional Services (Lawyer, CPA)", "Marketing & Advertising", "Business Insurance", "Business Travel", "Employee Salaries"],
     "Taxes & Government": ["Income Tax", "Business Tax", "Government Fees & Permits", "LTO Fees", "NBI / Police Clearance"],
-    "Miscellaneous": ["ATM Withdrawal Fees", "Notarial & Documentary Fees", "Fines & Penalties", "Subscriptions (Other)", "Unclassified Expenses"]
+    "Miscellaneous": ["ATM Withdrawal Fees", "Notaries", "Fines & Penalties", "Subscriptions (Other)", "Unclassified Expenses"]
   }
 };
 
@@ -70,12 +70,7 @@ const DOM = {
   budgetAmount: $('budgetAmount')
 };
 
-const fmt = n => '₱' + Math.abs(n).toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-const fmtShort = n => {
-  if (n >= 1000000) return '₱' + (n/1000000).toFixed(1) + 'M';
-  if (n >= 1000) return '₱' + (n/1000).toFixed(1) + 'K';
-  return fmt(n);
-};
+const fmt = n => '₱' + Math.abs(n || 0).toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
 // ═══════════════════════════════════════════════════════════
 //  INITIALIZATION
@@ -85,11 +80,6 @@ async function init() {
   state.user = await Auth.getCurrentUser();
   
   if (state.user) {
-    if (!window.LEDGER_CONFIG || window.LEDGER_CONFIG.GITHUB_TOKEN === "YOUR_GITHUB_TOKEN") {
-      showToast('Config incomplete. Please check config.js', 'error');
-      $('auth-screen').classList.remove('hidden');
-      return;
-    }
     $('auth-screen').classList.add('hidden');
     await loadAppData();
     initApp();
@@ -99,15 +89,8 @@ async function init() {
 }
 
 async function loadAppData() {
-  showToast('Opening Vault...', 'neutral');
-  try {
-    state.transactions = await DB.getTransactions();
-    state.budgets = await DB.getBudgets();
-    showToast('Vault Opened!', 'success');
-  } catch (err) {
-    console.error('Failed to load data:', err);
-    showToast('Vault Sync Error. Check GitHub token.', 'error');
-  }
+  state.transactions = await DB.getTransactions();
+  state.budgets = await DB.getBudgets();
 }
 
 function initApp() {
@@ -134,7 +117,7 @@ window.handleLogin = async () => {
 window.logout = () => Auth.logout();
 
 // ═══════════════════════════════════════════════════════════
-//  NAVIGATION & UI
+//  UI & NAVIGATION
 // ═══════════════════════════════════════════════════════════
 
 const VIEW_META = {
@@ -165,9 +148,7 @@ function updateGreeting() {
     const h = new Date().getHours();
     const g = h < 12 ? 'Good Morning' : h < 18 ? 'Good Afternoon' : 'Good Evening';
     const name = state.user?.name || 'User';
-    const randoms = [`Welcome Back, ${name}!`, `${name} returns!`, `Master ${name} has come back!`];
-    const pool = [`${g}, ${name}!`, ...randoms];
-    $('dashboardGreeting').textContent = pool[Math.floor(Math.random() * pool.length)];
+    $('dashboardGreeting').textContent = `${g}, ${name}!`;
 }
 
 function renderView(id) {
@@ -190,8 +171,8 @@ function getFilteredTransactions() {
 
 function renderDashboard() {
   const txs = getFilteredTransactions();
-  const income = txs.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0);
-  const expenses = txs.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
+  const income = txs.filter(t => t.type === 'income').reduce((s, t) => s + (t.amount || 0), 0);
+  const expenses = txs.filter(t => t.type === 'expense').reduce((s, t) => s + (t.amount || 0), 0);
   const net = income - expenses;
   const rate = income > 0 ? ((net / income) * 100).toFixed(1) : 0;
 
@@ -222,101 +203,79 @@ function renderTxItem(tx) {
   const icon = getCatIcon(tx.category);
   const bg = isIncome ? 'var(--accent-green-dim)' : 'var(--accent-red-dim)';
   const d = new Date(tx.date + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-  const pill = `<span class="pill ${isIncome?'green':'red'}">${tx.category}</span>`;
   return `
     <div class="tx-item" onclick="editTx('${tx.id}')">
       <div class="tx-avatar" style="background:${bg};">${icon}</div>
       <div>
-        <div class="tx-desc">${tx.description || tx.subcategory || tx.category}</div>
-        <div class="tx-meta">${d} · ${tx.subcategory || ''} · ${tx.payment_method || ''}</div>
+        <div class="tx-desc">${tx.description || tx.category}</div>
+        <div class="tx-meta">${d} · ${tx.category} · ${tx.payment_method || ''}</div>
       </div>
-      ${pill}
       <div class="tx-amount ${tx.type}">${isIncome ? '+' : '-'}${fmt(tx.amount)}</div>
     </div>`;
 }
 
 function getCatIcon(cat) {
-  const map = {
-    'Housing':'H','Food & Dining':'F','Transportation':'T','Healthcare':'H',
-    'Personal Care':'P','Entertainment':'E','Technology':'T','Financial Obligations':'F',
-    'Savings & Investments':'S','Education':'E','Travel & Vacation':'V','Gifts & Charity':'G',
-    'Children & Family':'C','Business Expenses':'B','Taxes & Government':'T','Miscellaneous':'M',
-    'Salary & Wages':'S','Freelance & Contract':'F','Business Revenue':'B','Investments':'I',
-    'Rental Income':'R','Government & Benefits':'G','Other Income':'O'
-  };
-  return map[cat] || cat.slice(0, 2).toUpperCase();
+  const map = { 'Housing':'H','Food & Dining':'F','Transportation':'T','Healthcare':'H','Personal Care':'P','Entertainment':'E','Technology':'T','Miscellaneous':'M','Salary & Wages':'S' };
+  return map[cat] || (cat ? cat.slice(0, 1).toUpperCase() : '?');
 }
 
-// Transaction List View
 function renderTransactionTable() {
     const txs = getFilteredTransactions();
     const tbody = $('txTableBody');
     if (txs.length === 0) {
         tbody.innerHTML = '';
         $('txEmptyState').style.display = 'block';
-        $('txCount').textContent = '0 transactions';
-        $('txTotal').textContent = 'Total: ₱0.00';
     } else {
         $('txEmptyState').style.display = 'none';
         tbody.innerHTML = txs.map(tx => `
             <tr onclick="editTx('${tx.id}')">
                 <td><div class="tx-avatar small">${getCatIcon(tx.category)}</div></td>
-                <td class="mono" style="font-size:12px;">${tx.date}</td>
-                <td><div class="fw-500">${tx.description}</div><div class="text-muted" style="font-size:11px;">${tx.tags || ''}</div></td>
+                <td class="mono">${tx.date}</td>
+                <td><div class="fw-500">${tx.description}</div></td>
                 <td><span class="pill">${tx.category}</span></td>
                 <td>${tx.payment_method}</td>
-                <td class="text-muted" style="font-size:11px; max-width:150px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${tx.notes || ''}</td>
+                <td>${tx.notes || ''}</td>
                 <td class="mono fw-600 ${tx.type}" style="text-align:right;">${tx.type==='income'?'+':'-'}${fmt(tx.amount)}</td>
-                <td style="text-align:center;"><button class="btn btn-ghost" style="padding:4px;" onclick="event.stopPropagation(); deleteTx('${tx.id}')">✕</button></td>
+                <td style="text-align:center;"><button class="btn btn-ghost" onclick="event.stopPropagation(); deleteTx('${tx.id}')">✕</button></td>
             </tr>
         `).join('');
-        $('txCount').textContent = `${txs.length} transactions`;
-        const total = txs.reduce((s,t) => s + (t.type==='income'?t.amount:-t.amount), 0);
-        $('txTotal').textContent = `Total: ${fmt(total)}`;
     }
 }
 
-// Budget View
 async function renderBudget() {
     const txs = getFilteredTransactions();
     const budgets = state.budgets;
     const grid = $('budgetGrid');
     
-    const cats = Object.keys(CATEGORIES.expense);
     if (!Object.keys(budgets).length) {
         grid.innerHTML = '';
         $('budgetEmpty').style.display = 'block';
     } else {
         $('budgetEmpty').style.display = 'none';
         grid.innerHTML = Object.entries(budgets).map(([cat, limit]) => {
-            const spent = txs.filter(t => t.category === cat && t.type === 'expense').reduce((s,t)=>s+t.amount, 0);
+            const spent = txs.filter(t => t.category === cat && t.type === 'expense').reduce((s,t)=>s+(t.amount||0), 0);
             const percent = Math.min(100, (spent/limit)*100);
-            const remain = limit - spent;
-            const color = percent > 90 ? 'var(--accent-red)' : percent > 70 ? 'var(--accent-orange)' : 'var(--accent-blue)';
             return `
                 <div class="card budget-card">
                     <div class="budget-header">
-                        <div><div class="fw-600">${cat}</div><div class="text-muted" style="font-size:12px;">Limit: ${fmt(limit)}</div></div>
-                        <button class="btn btn-ghost" style="padding:4px" onclick="deleteBudget('${cat}')">✕</button>
+                        <div class="fw-600">${cat}</div>
+                        <button class="btn btn-ghost" onclick="deleteBudget('${cat}')">✕</button>
                     </div>
-                    <div class="progress-bar" style="height:8px; margin:12px 0;"><div class="progress-fill" style="width:${percent}%; background:${color};"></div></div>
-                    <div style="display:flex; justify-content:space-between; font-size:13px;">
+                    <div class="progress-bar"><div class="progress-fill" style="width:${percent}%; background:${percent>90?'var(--accent-red)':'var(--accent-blue)'}"></div></div>
+                    <div style="display:flex; justify-content:space-between; font-size:12px; margin-top:8px;">
                         <span>Spent: ${fmt(spent)}</span>
-                        <span class="fw-600" style="color:${remain < 0 ? 'var(--accent-red)' : ''}">${remain < 0 ? 'Over' : 'Left'}: ${fmt(Math.abs(remain))}</span>
+                        <span>Limit: ${fmt(limit)}</span>
                     </div>
                 </div>
             `;
         }).join('');
     }
-    
-    // Populate budget modal dropdown
+    const cats = Object.keys(CATEGORIES.expense);
     $('budgetCat').innerHTML = cats.map(c => `<option value="${c}">${c}</option>`).join('');
 }
 
-// Reports View
 function renderReports() {
     const txs = state.transactions;
-    // Build Trend Chart
     const months = {};
     txs.forEach(tx => {
         const m = tx.date.slice(0, 7);
@@ -331,20 +290,12 @@ function renderReports() {
         data: {
             labels: sortedMo,
             datasets: [
-                { label: 'Income', data: sortedMo.map(m=>months[m].income), borderColor: '#30D158', tension: 0.3, fill: false },
-                { label: 'Expenses', data: sortedMo.map(m=>months[m].expense), borderColor: '#FF453A', tension: 0.3, fill: false }
+                { label: 'Income', data: sortedMo.map(m=>months[m].income), borderColor: '#30D158', tension: 0.3 },
+                { label: 'Expenses', data: sortedMo.map(m=>months[m].expense), borderColor: '#FF453A', tension: 0.3 }
             ]
         },
         options: { responsive: true, maintainAspectRatio: false }
     });
-
-    // Summary table
-    $('summaryBody').innerHTML = sortedMo.reverse().map(m => {
-        const { income, expense } = months[m];
-        const net = income - expense;
-        const rate = income > 0 ? ((net / income) * 100).toFixed(1) : 0;
-        return `<tr><td class="mono">${m}</td><td style="text-align:right" class="text-green">${fmt(income)}</td><td style="text-align:right" class="text-red">${fmt(expense)}</td><td style="text-align:right" class="fw-600">${fmt(net)}</td><td style="text-align:right">${rate}%</td><td style="text-align:right">${txs.filter(t=>t.date.startsWith(m)).length}</td></tr>`;
-    }).join('');
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -359,18 +310,18 @@ function buildCashflowChart(txs) {
       if (tx.type === 'income') months[m].income += tx.amount;
       else months[m].expenses += tx.amount;
     });
-    const labels = Object.keys(months).sort().map(m => m);
+    const labels = Object.keys(months).sort();
     if (cashflowChart) cashflowChart.destroy();
     cashflowChart = new Chart($('cashflowChart').getContext('2d'), {
       type: 'bar',
       data: {
         labels: labels,
         datasets: [
-          { label: 'Income', data: labels.map(m => months[m].income), backgroundColor: 'rgba(48,209,88,0.2)', borderColor: '#30D158', borderWidth: 1.5, borderRadius: 6 },
-          { label: 'Expenses', data: labels.map(m => months[m].expenses), backgroundColor: 'rgba(255,69,58,0.2)', borderColor: '#FF453A', borderWidth: 1.5, borderRadius: 6 }
+          { label: 'Income', data: labels.map(m => months[m].income), backgroundColor: 'rgba(48,209,88,0.2)', borderColor: '#30D158', borderWidth: 1 },
+          { label: 'Expenses', data: labels.map(m => months[m].expenses), backgroundColor: 'rgba(255,69,58,0.2)', borderColor: '#FF453A', borderWidth: 1 }
         ]
       },
-      options: { responsive: true, maintainAspectRatio: false, scales: { y: { ticks: { callback: v => fmtShort(v) } } } }
+      options: { responsive: true, maintainAspectRatio: false }
     });
 }
 
@@ -379,21 +330,15 @@ function buildPieChart(txs) {
     txs.filter(t => t.type === 'expense').forEach(t => { cats[t.category] = (cats[t.category] || 0) + t.amount; });
     const sorted = Object.entries(cats).sort((a,b) => b[1]-a[1]).slice(0, 8);
     if (pieChart) pieChart.destroy();
-    const total = sorted.reduce((s, [,v]) => s + v, 0);
     pieChart = new Chart($('pieChart').getContext('2d'), {
       type: 'doughnut',
       data: { labels: sorted.map(([k]) => k), datasets: [{ data: sorted.map(([,v]) => v), backgroundColor: CAT_COLORS }] },
-      options: { plugins: { legend: { display: false } }, cutout: '72%', maintainAspectRatio: false }
+      options: { plugins: { legend: { display: false } }, cutout: '70%', maintainAspectRatio: false }
     });
-    $('catLegend').innerHTML = sorted.map(([k, v], i) => `
-      <div class="cat-item">
-        <div class="cat-item-header"><span style="font-size:12px;"><div class="cat-dot" style="background:${CAT_COLORS[i]}"></div> ${k}</span> <span>${fmt(v)}</span></div>
-        <div class="progress-bar"><div class="progress-fill" style="width:${v/total*100}%; background:${CAT_COLORS[i]};"></div></div>
-      </div>`).join('');
 }
 
 // ═══════════════════════════════════════════════════════════
-//  CRUD UI PART 2
+//  CRUD UI
 // ═══════════════════════════════════════════════════════════
 
 window.saveTransaction = async () => {
@@ -409,58 +354,39 @@ window.saveTransaction = async () => {
         notes: $('txNotes').value,
         tags: $('txTags').value
     };
-    if (!tx.date || !tx.amount || !tx.description) { showToast('Complete required fields', 'error'); return; }
-    try {
-        showToast('Syncing Vault...', 'neutral');
-        await DB.saveTransaction(tx);
-        showToast('Vault Updated!', 'success');
-        closeModal();
-        await loadAppData();
-        renderView(document.querySelector('.nav-item.active').dataset.view);
-    } catch (e) { showToast(e.message, 'error'); }
+    if (!tx.date || !tx.amount) { showToast('Date and Amount required', 'error'); return; }
+    await DB.saveTransaction(tx);
+    showToast('Vault Updated!');
+    closeModal();
+    await loadAppData();
+    renderView(document.querySelector('.nav-item.active').dataset.view);
 };
 
 window.deleteTx = async (id) => {
     if (!confirm('Permanent delete from vault?')) return;
-    try {
-        showToast('Syncing Vault...', 'neutral');
-        await DB.deleteTransaction(id);
-        await loadAppData();
-        renderView(document.querySelector('.nav-item.active').dataset.view);
-    } catch(e) { showToast(e.message, 'error'); }
+    await DB.deleteTransaction(id);
+    await loadAppData();
+    renderView(document.querySelector('.nav-item.active').dataset.view);
 };
-
-window.openBudgetModal = () => {
-    $('budgetAmount').value = '';
-    $('budgetModal').classList.add('open');
-};
-window.closeBudgetModal = () => $('budgetModal').classList.remove('open');
 
 window.saveBudget = async () => {
     const cat = $('budgetCat').value;
     const amt = parseFloat($('budgetAmount').value);
     if (!amt) return;
-    try {
-        showToast('Syncing Vault...', 'neutral');
-        await DB.saveBudget(cat, amt);
-        showToast('Budget Updated!', 'success');
-        closeBudgetModal();
-        await loadAppData();
-        renderView('budget');
-    } catch(e) { showToast(e.message, 'error'); }
+    await DB.saveBudget(cat, amt);
+    closeBudgetModal();
+    await loadAppData();
+    renderView('budget');
 };
 
 window.deleteBudget = async (cat) => {
-    if (!confirm('Remove budget for ' + cat + '?')) return;
-    try {
-        await DB.deleteBudget(cat);
-        await loadAppData();
-        renderView('budget');
-    } catch(e) { showToast(e.message, 'error'); }
+    await DB.deleteBudget(cat);
+    await loadAppData();
+    renderView('budget');
 };
 
 // ═══════════════════════════════════════════════════════════
-//  HELPERS & UTILS
+//  HELPERS
 // ═══════════════════════════════════════════════════════════
 
 function buildMonthOptions() {
@@ -469,12 +395,24 @@ function buildMonthOptions() {
   $('filterMonth').innerHTML = '<option value="all">All Time</option>' + sorted.map(m => `<option value="${m}">${m}</option>`).join('');
 }
 
+function populateCatSelect(type) {
+    const cats = Object.keys(CATEGORIES[type]);
+    $('txCat').innerHTML = cats.map(c => `<option value="${c}">${c}</option>`).join('');
+    updateSubcats();
+}
+
+function updateSubcats() {
+    const type = document.querySelector('input[name="txType"]:checked').value;
+    const cat = $('txCat').value;
+    const subs = CATEGORIES[type][cat] || [];
+    $('txSubcat').innerHTML = subs.map(s => `<option value="${s}">${s}</option>`).join('');
+}
+
 function showToast(msg, type = 'success') {
   const t = $('toast');
-  if (!t) return;
   t.textContent = msg;
   t.className = 'toast ' + type + ' show';
-  setTimeout(() => t.classList.remove('show'), 3200);
+  setTimeout(() => t.classList.remove('show'), 3000);
 }
 
 function bindEvents() {
@@ -484,6 +422,20 @@ function bindEvents() {
   $('filterMonth').addEventListener('change', () => renderView(document.querySelector('.nav-item.active').dataset.view));
 }
 
+window.openModal = (id = null) => {
+    state.editId = id;
+    $('txModal').classList.add('open');
+    if (!id) {
+        $('txDate').value = new Date().toISOString().split('T')[0];
+        $('txAmount').value = '';
+        $('txDesc').value = '';
+        $('txNotes').value = '';
+    }
+};
+
+window.closeModal = () => $('txModal').classList.remove('open');
+window.openBudgetModal = () => $('budgetModal').classList.add('open');
+window.closeBudgetModal = () => $('budgetModal').classList.remove('open');
 window.toggleSidebar = () => $('sidebar').classList.toggle('open');
 window.closeSidebar = () => $('sidebar').classList.remove('open');
 
