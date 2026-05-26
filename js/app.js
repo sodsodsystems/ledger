@@ -135,6 +135,16 @@ window.handleSetup = async () => {
     } catch (e) { showToast(e.message, 'error'); }
 };
 
+window.showSetup = () => {
+    $('login-view').classList.add('hidden');
+    $('setup-view').classList.remove('hidden');
+};
+
+window.showLogin = () => {
+    $('setup-view').classList.add('hidden');
+    $('login-view').classList.remove('hidden');
+};
+
 window.logout = () => Auth.logout();
 
 // ═══════════════════════════════════════════════════════════
