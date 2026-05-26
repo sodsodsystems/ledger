@@ -92,6 +92,9 @@
     <button class="nav-item" data-view="reports">
       <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 17l4-4 4 4 6-6"/><path d="M5 21h14"/></svg></span> Reports
     </button>
+    <button class="nav-item" data-view="settings">
+      <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></span> Settings
+    </button>
   </nav>
   <div class="sidebar-footer">
     <button class="export-btn" onclick="exportToExcel()">
@@ -256,15 +259,53 @@
             </table>
         </div>
     </section>
+
+    <!-- SETTINGS VIEW -->
+    <section id="view-settings" class="view">
+        <div class="card" style="max-width:600px;">
+            <div class="card-header">
+                <div class="card-title">Custom Categories</div>
+                <div class="card-sub">Add unique categories and subcategories to your vault.</div>
+            </div>
+            
+            <div style="padding:20px;">
+                <div class="form-group">
+                    <label class="form-label">Transaction Type</label>
+                    <div style="display:flex; gap:16px; margin-top:8px;">
+                        <label style="display:flex; align-items:center; gap:6px; cursor:pointer;">
+                            <input type="radio" name="customType" value="expense" checked> Expense
+                        </label>
+                        <label style="display:flex; align-items:center; gap:6px; cursor:pointer;">
+                            <input type="radio" name="customType" value="income"> Income
+                        </label>
+                    </div>
+                </div>
+                
+                <div class="form-group" style="margin-top:20px;">
+                    <label class="form-label">Category Name</label>
+                    <input type="text" id="newCatName" class="form-input" placeholder="e.g. Subscriptions">
+                </div>
+                
+                <div class="form-group" style="margin-top:20px;">
+                    <label class="form-label">Subcategory Name (Optional)</label>
+                    <input type="text" id="newSubName" class="form-input" placeholder="e.g. Netflix">
+                </div>
+                
+                <button class="btn btn-primary" style="margin-top:24px; width:100%;" onclick="handleAddCategory()">Add to Taxonomy</button>
+            </div>
+        </div>
+    </section>
   </div>
 </main>
 
 <!-- MODALS -->
 <div class="modal-overlay" id="txModal">
   <div class="modal">
-    <div class="modal-title">
-      <span id="modalTitle">Add Transaction</span>
-      <button class="modal-close" onclick="closeModal()" aria-label="Close modal">✕</button>
+    <div class="modal-title" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; border-bottom:1px solid var(--border); padding-bottom:12px;">
+      <span id="modalTitle" style="font-size:17px; font-weight:700;">Add Transaction</span>
+      <button class="btn btn-ghost" style="padding:4px;" onclick="closeModal()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
     </div>
     <div class="form-grid">
       <div class="form-group form-full">

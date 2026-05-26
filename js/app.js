@@ -45,8 +45,17 @@ let state = {
   user: null,
   transactions: [],
   budgets: {},
+  userCategories: { income: {}, expense: {} },
   editId: null
 };
+
+function getAllCategories() {
+    const merged = {
+        income: { ...CATEGORIES.income, ...state.userCategories.income },
+        expense: { ...CATEGORIES.expense, ...state.userCategories.expense }
+    };
+    return merged;
+}
 
 const $ = id => document.getElementById(id);
 const DOM = {
@@ -101,6 +110,7 @@ async function init() {
 async function loadAppData() {
   state.transactions = await DB.getTransactions();
   state.budgets = await DB.getBudgets();
+  state.userCategories = await DB.getUserCategories();
 }
 
 function initApp() {
@@ -155,7 +165,8 @@ const VIEW_META = {
   dashboard: { title: 'Dashboard', sub: 'Your financial overview' },
   transactions: { title: 'Transactions', sub: 'All income and expense records' },
   budget: { title: 'Budget Tracker', sub: 'Monthly spending limits by category' },
-  reports: { title: 'Reports & Analytics', sub: 'Trends, insights and summaries' }
+  reports: { title: 'Reports & Analytics', sub: 'Trends, insights and summaries' },
+  settings: { title: 'Settings', sub: 'Customize categories and preferences' }
 };
 
 window.navigate = (viewId) => {
@@ -433,7 +444,8 @@ function buildMonthOptions() {
 }
 
 function populateCatSelect(type) {
-    const cats = Object.keys(CATEGORIES[type]);
+    const allCats = getAllCategories()[type];
+    const cats = Object.keys(allCats);
     $('txCat').innerHTML = cats.map(c => `<option value="${c}">${c}</option>`).join('');
     updateSubcats();
 }
@@ -441,9 +453,27 @@ function populateCatSelect(type) {
 function updateSubcats() {
     const type = document.querySelector('input[name="txType"]:checked').value;
     const cat = $('txCat').value;
-    const subs = CATEGORIES[type][cat] || [];
+    const allCats = getAllCategories()[type];
+    const subs = allCats[cat] || [];
     $('txSubcat').innerHTML = subs.map(s => `<option value="${s}">${s}</option>`).join('');
 }
+
+window.handleAddCategory = async () => {
+    const type = document.querySelector('input[name="customType"]:checked').value;
+    const cat = $('newCatName').value.trim();
+    const sub = $('newSubName').value.trim();
+    
+    if (!cat) { showToast('Category name required', 'error'); return; }
+    
+    await DB.saveCustomCategory(type, cat, sub || null);
+    showToast('Category Added!');
+    
+    $('newCatName').value = '';
+    $('newSubName').value = '';
+    
+    await loadAppData();
+    populateCatSelect(document.querySelector('input[name="txType"]:checked').value);
+};
 
 function showToast(msg, type = 'success') {
   const t = $('toast');
@@ -462,14 +492,45 @@ function bindEvents() {
 
 window.openModal = (id = null) => {
     state.editId = id;
-    $('txModal').classList.add('open');
-    if (!id) {
+    const modal = $('txModal');
+    modal.classList.add('open');
+    
+    if (id) {
+        const tx = state.transactions.find(t => t.id === id);
+        if (tx) {
+            $('modalTitle').textContent = 'Edit Transaction';
+            document.querySelector(`input[name="txType"][value="${tx.type}"]`).checked = true;
+            populateCatSelect(tx.type);
+            
+            $('txDate').value = tx.date;
+            $('txAmount').value = tx.amount;
+            $('txDesc').value = tx.description || '';
+            $('txCat').value = tx.category;
+            updateSubcats();
+            $('txSubcat').value = tx.subcategory || '';
+            $('txPayment').value = tx.payment_method || 'Cash';
+            $('txNotes').value = tx.notes || '';
+            $('txTags').value = tx.tags || '';
+            
+            // Show advanced if notes/tags exist
+            if (tx.notes || tx.tags) {
+                $('advancedFields').style.display = 'block';
+                $('advancedToggle').textContent = '− Hide Advanced';
+            }
+        }
+    } else {
+        $('modalTitle').textContent = 'Add Transaction';
         $('txDate').value = new Date().toISOString().split('T')[0];
         $('txAmount').value = '';
         $('txDesc').value = '';
         $('txNotes').value = '';
+        $('txTags').value = '';
+        $('advancedFields').style.display = 'none';
+        $('advancedToggle').textContent = '+ Advanced Options';
     }
 };
+
+window.editTx = (id) => openModal(id);
 
 window.closeModal = () => $('txModal').classList.remove('open');
 window.openBudgetModal = () => $('budgetModal').classList.add('open');

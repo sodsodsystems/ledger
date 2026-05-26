@@ -62,5 +62,24 @@ export const DB = {
     const data = await this.getData();
     if (data.budgets) delete data.budgets[category];
     await this.saveData(data);
+  },
+
+  async getUserCategories() {
+    const data = await this.getData();
+    return data.categories || { income: {}, expense: {} };
+  },
+
+  async saveCustomCategory(type, category, subcategory = null) {
+    const data = await this.getData();
+    if (!data.categories) data.categories = { income: {}, expense: {} };
+    
+    if (!data.categories[type]) data.categories[type] = {};
+    if (!data.categories[type][category]) data.categories[type][category] = [];
+    
+    if (subcategory && !data.categories[type][category].includes(subcategory)) {
+      data.categories[type][category].push(subcategory);
+    }
+    
+    await this.saveData(data);
   }
 };
