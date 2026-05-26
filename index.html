@@ -262,7 +262,7 @@
   <div class="modal">
     <div class="modal-title">
       <span id="modalTitle">Add Transaction</span>
-      <button class="modal-close" onclick="closeModal()">✕</button>
+      <button class="modal-close" onclick="closeModal()" aria-label="Close modal">✕</button>
     </div>
     <div class="form-grid">
       <div class="form-group form-full">
@@ -305,13 +305,17 @@
           <option value="Bank Transfer">Bank Transfer</option>
         </select>
       </div>
-      <div class="form-group">
-        <label class="form-label">Tags (Optional)</label>
-        <input type="text" class="form-input" id="txTags" placeholder="e.g. travel, food, recurring">
-      </div>
-      <div class="form-group form-full">
-        <label class="form-label">Notes</label>
-        <textarea class="form-textarea" id="txNotes" placeholder="Additional details..."></textarea>
+      <!-- Advanced fields: Tags & Notes (Hick's Law: hidden by default) -->
+      <button type="button" class="form-advanced-toggle form-full" id="advancedToggle" onclick="toggleAdvancedFields()">+ Advanced Options</button>
+      <div class="form-advanced form-full" id="advancedFields" style="display:none;">
+        <div class="form-group">
+          <label class="form-label">Tags (Optional)</label>
+          <input type="text" class="form-input" id="txTags" placeholder="e.g. travel, food, recurring">
+        </div>
+        <div class="form-group form-full">
+          <label class="form-label">Notes</label>
+          <textarea class="form-textarea" id="txNotes" placeholder="Additional details..."></textarea>
+        </div>
       </div>
     </div>
     <div class="modal-footer">
@@ -325,7 +329,7 @@
   <div class="modal" style="width:420px;">
     <div class="modal-title">
       Set Budget Limit
-      <button class="modal-close" onclick="closeBudgetModal()">✕</button>
+      <button class="modal-close" onclick="closeBudgetModal()" aria-label="Close budget modal">✕</button>
     </div>
     <div class="form-grid" style="grid-template-columns:1fr;">
       <div class="form-group">
@@ -345,6 +349,28 @@
 </div>
 
 <div class="toast" id="toast"></div>
+
+<!-- Mobile Bottom Tab Bar (Jakob's Law) -->
+<nav class="bottom-tab-bar" id="bottomTabBar" aria-label="Main navigation">
+  <div class="tab-bar-inner">
+    <button class="tab-item active" data-view="dashboard" aria-label="Dashboard">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="6" height="6" rx="1.5"/><rect x="14" y="4" width="6" height="6" rx="1.5"/><rect x="4" y="14" width="6" height="6" rx="1.5"/><rect x="14" y="14" width="6" height="6" rx="1.5"/></svg>
+      Home
+    </button>
+    <button class="tab-item" data-view="transactions" aria-label="Transactions">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 7h10"/><path d="M7 12h10"/><path d="M7 17h6"/></svg>
+      Transactions
+    </button>
+    <button class="tab-item" data-view="budget" aria-label="Budget">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9" opacity="0.25"/><circle cx="12" cy="12" r="5"/></svg>
+      Budget
+    </button>
+    <button class="tab-item" data-view="reports" aria-label="Reports">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 17l4-4 4 4 6-6"/><path d="M5 21h14"/></svg>
+      Reports
+    </button>
+  </div>
+</nav>
 
 <!-- App Scripts -->
 <script type="module" src="js/app.js"></script>

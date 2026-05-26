@@ -151,12 +151,17 @@ const VIEW_META = {
 window.navigate = (viewId) => {
   document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-  const target = $('view-' + viewId);
-  if (target) target.classList.add('active');
-  
+  // Sync sidebar
   const navItem = document.querySelector(`.nav-item[data-view="${viewId}"]`);
   if (navItem) navItem.classList.add('active');
-  
+  // Sync bottom tab bar
+  document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
+  const tabItem = document.querySelector(`.tab-item[data-view="${viewId}"]`);
+  if (tabItem) tabItem.classList.add('active');
+
+  const target = $('view-' + viewId);
+  if (target) target.classList.add('active');
+
   const meta = VIEW_META[viewId];
   $('viewTitle').textContent = meta.title;
   $('viewSub').textContent = meta.sub;
@@ -207,7 +212,8 @@ function renderDashboard() {
   $('kpiIncomeChange').textContent = txs.filter(t=>t.type==='income').length + ' entries';
   $('kpiExpensesChange').textContent = txs.filter(t=>t.type==='expense').length + ' entries';
 
-  const recent = [...txs].sort((a,b)=>new Date(b.date)-new Date(a.date)).slice(0, 8);
+  // Miller's Law: show max 7 recent transactions
+  const recent = [...txs].sort((a,b)=>new Date(b.date)-new Date(a.date)).slice(0, 7);
   const rList = $('recentTxList');
   if (recent.length === 0) {
     rList.innerHTML = `<div class="empty-state"><h3>No transactions yet</h3></div>`;
@@ -222,16 +228,16 @@ function renderDashboard() {
 function renderTxItem(tx) {
   const isIncome = tx.type === 'income';
   const icon = getCatIcon(tx.category);
-  const bg = isIncome ? 'var(--accent-green-dim)' : 'var(--accent-red-dim)';
   const d = new Date(tx.date + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  const prefix = isIncome ? '+' : '−';
   return `
-    <div class="tx-item" onclick="editTx('${tx.id}')">
-      <div class="tx-avatar" style="background:${bg};">${icon}</div>
-      <div>
+    <div class="tx-item" onclick="editTx('${tx.id}')" role="button" aria-label="${isIncome ? 'Income' : 'Expense'} ${fmt(tx.amount)} — ${tx.description || tx.category}">
+      <div class="tx-avatar ${tx.type}" aria-hidden="true">${icon}</div>
+      <div class="tx-body">
         <div class="tx-desc">${tx.description || tx.category}</div>
-        <div class="tx-meta">${d} · ${tx.category} · ${tx.payment_method || ''}</div>
+        <div class="tx-meta">${d} · ${tx.category}</div>
       </div>
-      <div class="tx-amount ${tx.type}">${isIncome ? '+' : '-'}${fmt(tx.amount)}</div>
+      <div class="tx-amount ${tx.type}" aria-label="${isIncome ? 'Income' : 'Expense'} ${fmt(tx.amount)}">${prefix}${fmt(tx.amount)}</div>
     </div>`;
 }
 
@@ -438,6 +444,7 @@ function showToast(msg, type = 'success') {
 
 function bindEvents() {
   document.querySelectorAll('.nav-item').forEach(btn => btn.addEventListener('click', () => navigate(btn.dataset.view)));
+  document.querySelectorAll('.tab-item').forEach(btn => btn.addEventListener('click', () => navigate(btn.dataset.view)));
   $('txCat').addEventListener('change', () => updateSubcats());
   document.querySelectorAll('input[name="txType"]').forEach(r => r.addEventListener('change', (e) => populateCatSelect(e.target.value)));
   $('filterMonth').addEventListener('change', () => renderView(document.querySelector('.nav-item.active').dataset.view));
@@ -458,6 +465,14 @@ window.closeModal = () => $('txModal').classList.remove('open');
 window.openBudgetModal = () => $('budgetModal').classList.add('open');
 window.closeBudgetModal = () => $('budgetModal').classList.remove('open');
 window.toggleSidebar = () => $('sidebar').classList.toggle('open');
-window.closeSidebar = () => $('sidebar').classList.remove('open');
+window.closeSidebar  = () => $('sidebar').classList.remove('open');
+
+window.toggleAdvancedFields = () => {
+  const fields = $('advancedFields');
+  const toggle = $('advancedToggle');
+  const isOpen = fields.style.display !== 'none';
+  fields.style.display = isOpen ? 'none' : 'contents';
+  toggle.textContent = isOpen ? '+ Advanced Options' : '− Hide Advanced';
+};
 
 init();
