@@ -85,6 +85,16 @@ async function init() {
     initApp();
   } else {
     $('auth-screen').classList.remove('hidden');
+    
+    // Check if users exist in localStorage
+    const hasUsers = await Auth.hasUsers();
+    if (hasUsers) {
+      $('login-view').classList.remove('hidden');
+      $('setup-view').classList.add('hidden');
+    } else {
+      $('login-view').classList.add('hidden');
+      $('setup-view').classList.remove('hidden');
+    }
   }
 }
 
@@ -110,6 +120,17 @@ window.handleLogin = async () => {
     if (!user || !pass) { showToast('Name and Password required', 'error'); return; }
     try {
         await Auth.login(user, pass);
+        location.reload();
+    } catch (e) { showToast(e.message, 'error'); }
+};
+
+window.handleSetup = async () => {
+    const user = $('setupUser').value.trim();
+    const pass = $('setupPassword').value.trim();
+    if (!user || !pass) { showToast('Please enter both name and password', 'error'); return; }
+    try {
+        await Auth.setupInitialUser(user, pass);
+        showToast('Vault Initialized!');
         location.reload();
     } catch (e) { showToast(e.message, 'error'); }
 };

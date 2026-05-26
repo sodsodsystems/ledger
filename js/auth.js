@@ -1,14 +1,23 @@
 export const Auth = {
+  // Key for storing user credential map (name -> password)
+  _STORAGE_KEY: 'ledger_secret_auth',
+
   async _loadUsers() {
-    try {
-      const response = await fetch('users.json');
-      if (!response.ok) throw new Error("Could not load user data");
-      const data = await response.json();
-      return data.users || {};
-    } catch (e) {
-      console.error("Auth Error:", e);
-      return {};
-    }
+    const raw = localStorage.getItem(this._STORAGE_KEY);
+    return raw ? JSON.parse(raw) : {};
+  },
+
+  async hasUsers() {
+    const users = await this._loadUsers();
+    return Object.keys(users).length > 0;
+  },
+
+  async setupInitialUser(username, password) {
+    const userKey = username.trim().toUpperCase();
+    const users = await this._loadUsers();
+    users[userKey] = { password: password.trim() };
+    localStorage.setItem(this._STORAGE_KEY, JSON.stringify(users));
+    return this.login(username, password);
   },
 
   async login(username, password) {
