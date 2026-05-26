@@ -14,3 +14,7 @@ Thumbs.db
 # Dependencies
 node_modules/
 dist/
+
+# Developer Documentation
+CODEBASE_SUMMARY.md
+SYS-DESIGN_SPEC.md
