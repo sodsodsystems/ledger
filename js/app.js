@@ -127,21 +127,30 @@ function initApp() {
 window.handleLogin = async () => {
     const user = $('loginUser').value.trim();
     const pass = $('loginPassword').value.trim();
-    if (!user || !pass) { showToast('Name and Password required', 'error'); return; }
+    if (!user) { showToast('Please enter your name', 'error'); $('loginUser').focus(); return; }
+    if (!pass) { showToast('Please enter your password', 'error'); $('loginPassword').focus(); return; }
+    
     try {
         await Auth.login(user, pass);
-        location.reload();
-    } catch (e) { showToast(e.message, 'error'); }
+        showToast('Access Granted', 'success');
+        setTimeout(() => location.reload(), 800);
+    } catch (e) { 
+        showToast(e.message, 'error'); 
+        $('auth-screen').classList.add('shake');
+        setTimeout(() => $('auth-screen').classList.remove('shake'), 400);
+    }
 };
 
 window.handleSetup = async () => {
     const user = $('setupUser').value.trim();
     const pass = $('setupPassword').value.trim();
-    if (!user || !pass) { showToast('Please enter both name and password', 'error'); return; }
+    if (!user) { showToast('Please enter a name for the vault', 'error'); $('setupUser').focus(); return; }
+    if (!pass || pass.length < 4) { showToast('Password must be at least 4 characters', 'error'); $('setupPassword').focus(); return; }
+    
     try {
         await Auth.setupInitialUser(user, pass);
         showToast('Vault Initialized!');
-        location.reload();
+        setTimeout(() => location.reload(), 1000);
     } catch (e) { showToast(e.message, 'error'); }
 };
 
@@ -213,7 +222,20 @@ let cashflowChart, pieChart, trendChart, reportPieChart;
 
 function getFilteredTransactions() {
   const month = DOM.filterMonth.value;
-  return state.transactions.filter(tx => month === 'all' || tx.date.startsWith(month));
+  const query = $('searchInput').value.toLowerCase().trim();
+  const type = $('typeFilter').value;
+  const cat = $('catFilter').value;
+
+  return state.transactions.filter(tx => {
+    const matchMonth = month === 'all' || tx.date.startsWith(month);
+    const matchType = type === 'all' || tx.type === type;
+    const matchCat = cat === 'all' || tx.category === cat;
+    
+    const searchStr = `${tx.description} ${tx.category} ${tx.subcategory || ''} ${tx.tags || ''}`.toLowerCase();
+    const matchSearch = !query || searchStr.includes(query);
+    
+    return matchMonth && matchType && matchCat && matchSearch;
+  });
 }
 
 function renderDashboard() {
@@ -259,6 +281,9 @@ function renderTxItem(tx) {
         <div class="tx-meta">${d} · ${tx.category}</div>
       </div>
       <div class="tx-amount ${tx.type}" aria-label="${isIncome ? 'Income' : 'Expense'} ${fmt(tx.amount)}">${prefix}${fmt(tx.amount)}</div>
+      <div class="tx-edit-trigger">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+      </div>
     </div>`;
 }
 
@@ -276,7 +301,7 @@ function renderTransactionTable() {
     } else {
         $('txEmptyState').style.display = 'none';
         tbody.innerHTML = txs.map(tx => `
-            <tr onclick="editTx('${tx.id}')">
+            <tr>
                 <td><div class="tx-avatar small">${getCatIcon(tx.category)}</div></td>
                 <td class="mono">${tx.date}</td>
                 <td><div class="fw-500">${tx.description}</div></td>
@@ -284,7 +309,12 @@ function renderTransactionTable() {
                 <td>${tx.payment_method}</td>
                 <td>${tx.notes || ''}</td>
                 <td class="mono fw-600 ${tx.type}" style="text-align:right;">${tx.type==='income'?'+':'-'}${fmt(tx.amount)}</td>
-                <td style="text-align:center;"><button class="btn btn-ghost" onclick="event.stopPropagation(); deleteTx('${tx.id}')">✕</button></td>
+                <td style="text-align:center; display:flex; gap:4px; justify-content:center;">
+                    <button class="action-btn" onclick="editTx('${tx.id}')" title="Edit">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                    </button>
+                    <button class="action-btn del" onclick="deleteTx('${tx.id}')" title="Delete">✕</button>
+                </td>
             </tr>
         `).join('');
     }
@@ -477,17 +507,31 @@ window.handleAddCategory = async () => {
 
 function showToast(msg, type = 'success') {
   const t = $('toast');
-  t.textContent = msg;
-  t.className = 'toast ' + type + ' show';
-  setTimeout(() => t.classList.remove('show'), 3000);
+  if (!t) return;
+  
+  const icon = type === 'success' 
+    ? `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" style="width:16px;height:16px;"><polyline points="20 6 9 17 4 12"></polyline></svg>`
+    : `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" style="width:16px;height:16px;"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>`;
+  
+  t.innerHTML = `${icon} <span>${msg}</span>`;
+  t.className = `toast show ${type}`;
+  
+  if (t.timer) clearTimeout(t.timer);
+  t.timer = setTimeout(() => t.classList.remove('show'), 3500);
 }
 
 function bindEvents() {
   document.querySelectorAll('.nav-item').forEach(btn => btn.addEventListener('click', () => navigate(btn.dataset.view)));
   document.querySelectorAll('.tab-item').forEach(btn => btn.addEventListener('click', () => navigate(btn.dataset.view)));
+  
+  $('typeFilter').addEventListener('change', () => renderTransactionTable());
+  $('catFilter').addEventListener('change', () => renderTransactionTable());
+  $('sortFilter').addEventListener('change', () => renderTransactionTable());
+  $('searchInput').addEventListener('input', () => renderTransactionTable());
+  $('filterMonth').addEventListener('change', () => renderView(document.querySelector('.nav-item.active').dataset.view));
+  
   $('txCat').addEventListener('change', () => updateSubcats());
   document.querySelectorAll('input[name="txType"]').forEach(r => r.addEventListener('change', (e) => populateCatSelect(e.target.value)));
-  $('filterMonth').addEventListener('change', () => renderView(document.querySelector('.nav-item.active').dataset.view));
 }
 
 window.openModal = (id = null) => {
