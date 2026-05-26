@@ -1,0 +1,16 @@
+# Sensitive data
+users.json
+.env
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE files
+.vscode/
+.idea/
+
+# Dependencies
+node_modules/
+dist/
