@@ -1,13 +1,22 @@
-// User credentials — edit this object to add/remove users or change passwords
-const USERS = {
-  "IAN":   "iloveallan",
-  "ALLAN": "iloveian"
-};
-
 export const Auth = {
+  async _loadUsers() {
+    try {
+      const response = await fetch('users.json');
+      if (!response.ok) throw new Error("Could not load user data");
+      const data = await response.json();
+      return data.users || {};
+    } catch (e) {
+      console.error("Auth Error:", e);
+      return {};
+    }
+  },
+
   async login(username, password) {
+    const users = await this._loadUsers();
     const userKey = username.trim().toUpperCase();
-    if (USERS[userKey] && USERS[userKey] === password.trim()) {
+    const user = users[userKey];
+
+    if (user && user.password === password.trim()) {
       const session = { name: userKey, loginAt: Date.now() };
       localStorage.setItem('ledger_session', JSON.stringify(session));
       return session;
