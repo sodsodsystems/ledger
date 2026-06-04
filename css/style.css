@@ -947,30 +947,35 @@ select.filter-select:focus { border-color: var(--accent-blue); }
 
 /* ── System Messages (Toasts) ── */
 .toast {
-  position: fixed;
-  top: 32px;
-  left: 50%;
-  transform: translateX(-50%) translateY(-20px);
-  padding: 10px 20px;
-  width: max-content;
-  max-width: 90vw;
-  border-radius: 40px;
+  position: fixed !important;
+  top: 32px !important;
+  left: 50% !important;
+  transform: translateX(-50%) translateY(-20px) !important;
+  padding: 10px 24px !important;
+  width: fit-content !important;
+  max-width: 85vw !important;
+  min-width: 200px !important;
+  height: auto !important;
+  min-height: auto !important;
+  border-radius: 40px !important;
   background: rgba(28,28,30,0.95);
   backdrop-filter: blur(20px) saturate(1.8);
   -webkit-backdrop-filter: blur(20px) saturate(1.8);
-  color: #FFF;
-  font-size: 14px;
-  font-weight: 600;
-  z-index: 10000;
-  display: flex;
-  align-items: center;
-  gap: 12px;
+  color: #FFF !important;
+  font-size: 14px !important;
+  font-weight: 600 !important;
+  z-index: 100000 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 12px !important;
   box-shadow: 0 8px 32px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.1);
   opacity: 0;
   pointer-events: none;
   transition: all 0.4s var(--ease-spring);
+  white-space: nowrap !important;
 }
-.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); pointer-events: all; }
+.toast.show { opacity: 1 !important; transform: translateX(-50%) translateY(0) !important; pointer-events: all !important; }
 .toast.error { background: var(--grad-red); border-color: rgba(255,255,255,0.2); }
 .toast.success { background: var(--grad-blue); border-color: rgba(255,255,255,0.2); }
 
