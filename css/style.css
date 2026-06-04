@@ -717,20 +717,21 @@ select.filter-select:focus { border-color: var(--accent-blue); }
   top: calc(100% + 6px);
   left: 0;
   right: 0;
-  background: var(--bg-surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  box-shadow: var(--shadow-modal);
-  z-index: 1000;
-  max-height: 280px;
+  background: #1c1c1e;
+  border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 12px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.7);
+  z-index: 9999;
+  max-height: 260px;
+  min-height: unset;
+  height: auto;
   overflow-y: auto;
+  overflow-x: hidden;
   opacity: 0;
-  transform: translateY(-10px) scale(0.95);
+  transform: translateY(-8px) scale(0.97);
   pointer-events: none;
   visibility: hidden;
-  transition: all 0.2s var(--ease-apple-decelerate);
-  backdrop-filter: blur(20px) saturate(1.8);
-  -webkit-backdrop-filter: blur(20px) saturate(1.8);
+  transition: opacity 0.18s ease, transform 0.18s ease, visibility 0.18s;
 }
 
 .ledger-select-container.open .ledger-select-menu {
