@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Ledger — Personal Finance Tracker</title>
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23007AFF' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6'/></svg>">
 <meta name="description" content="Ledger is a secure, local-first personal finance tracker with encrypted storage, budgets, reports, and Excel export.">
@@ -16,7 +16,7 @@
 <!-- Libraries -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
-<link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="css/style.css?v=2">
 <style>
   /* ── Authentication Overlay ── */
   #auth-screen {
@@ -94,6 +94,8 @@
     
     /* Shadows - Layered depth */
     --shadow-premium: 0 12px 40px rgba(0,0,0,0.6);
+    --shadow-glow-blue: 0 4px 16px rgba(0,122,255,0.35);
+    --shadow-lg: 0 8px 24px rgba(0,0,0,0.5);
   }
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -174,23 +176,30 @@
   }
   .sidebar-overlay.open { display: block; }
 
-  /* Logout button in user area */
+  /* Logout button — ghost style (red reserved for destructive actions only) */
   .logout-btn {
-    padding: 8px 14px;
-    border-radius: var(--radius-sm);
-    font-family: inherit;
-    font-size: 13px;
-    font-weight: 600;
-    cursor: pointer;
-    background: linear-gradient(135deg, #FF453A 0%, #FF2D55 100%);
-    color: #FFFFFF;
-    border: 1px solid rgba(255,255,255,0.1);
-    display: flex; align-items: center; gap: 6px;
-    transition: all var(--transition);
-    letter-spacing: -0.01em;
-    box-shadow: 0 4px 14px rgba(255, 69, 58, 0.3);
+    height: 44px !important;
+    min-height: 44px !important;
+    padding: 0 14px !important;
+    border-radius: var(--radius-sm) !important;
+    font-family: inherit !important;
+    font-size: 13px !important;
+    font-weight: 600 !important;
+    cursor: pointer !important;
+    background: var(--bg-card) !important;
+    color: var(--text-secondary) !important;
+    border: 1px solid var(--border) !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    transition: all var(--transition) !important;
+    letter-spacing: -0.01em !important;
   }
-  .logout-btn:hover { opacity: 0.9; transform: translateY(-1px); box-shadow: 0 6px 20px rgba(255, 69, 58, 0.45); }
+  .logout-btn:hover {
+    border-color: var(--border-hover) !important;
+    color: var(--text-primary) !important;
+    background: var(--bg-card-hover) !important;
+  }
 
   .sidebar-logo {
     padding: 28px 20px 22px;
@@ -321,7 +330,9 @@
   .topbar-right { display: flex; align-items: center; gap: 8px; }
 
   .month-select {
-    padding: 8px 12px;
+    height: 44px;
+    min-height: 44px;
+    padding: 0 12px;
     background: var(--bg-card);
     border: 1px solid var(--border);
     border-radius: var(--radius-sm);
@@ -331,11 +342,14 @@
     cursor: pointer;
     outline: none;
     transition: border-color var(--transition);
+    display: inline-flex; align-items: center;
   }
   .month-select:hover { border-color: var(--border-hover); }
 
   .btn {
-    padding: 9px 18px;
+    height: 44px;
+    min-height: 44px;
+    padding: 0 18px;
     border-radius: var(--radius-sm);
     font-family: inherit;
     font-size: 13px;
@@ -344,6 +358,7 @@
     cursor: pointer;
     transition: all var(--transition);
     border: none;
+    display: inline-flex; align-items: center; justify-content: center; gap: 6px;
   }
 
   .btn-primary {
@@ -401,13 +416,13 @@
     box-shadow: var(--shadow-premium);
   }
 
-  /* Extreme Premium Ambient Glows */
+  /* Extreme Premium Ambient Glows — per-card accent color */
   .kpi-card::before {
     content: '';
     position: absolute;
     top: 0; left: 0; right: 0;
     height: 2px;
-    background: var(--accent-blue);
+    background: var(--accent, var(--accent-blue));
     opacity: 0.6;
   }
 
@@ -435,8 +450,8 @@
     font-size: 11px;
     font-weight: 500;
     margin-top: 6px;
-    padding: 2px 7px;
-    border-radius: 4px;
+    padding: 3px 8px;
+    border-radius: 100px;
   }
 
   .kpi-change.up { color: var(--accent-green); background: var(--accent-green-dim); }
@@ -581,39 +596,19 @@
   }
 
   /* ── Transaction View ── */
-  .tx-controls {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin-bottom: 20px;
+  /* Transaction filter bar — styles moved to style.css for consolidation */
+  
+  .tx-date-header-row {
+    background: rgba(255,255,255,0.02) !important;
   }
-
-  .search-input {
-    flex: 1;
-    padding: 9px 14px;
-    background: var(--bg-card);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-sm);
-    color: var(--text-primary);
-    font-family: 'Sora', sans-serif;
-    font-size: 13px;
-    outline: none;
-    transition: border-color var(--transition);
-  }
-
-  .search-input::placeholder { color: var(--text-muted); }
-  .search-input:focus { border-color: var(--border-hover); }
-
-  select.filter-select {
-    padding: 9px 12px;
-    background: var(--bg-card);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-sm);
-    color: var(--text-secondary);
-    font-family: 'Sora', sans-serif;
-    font-size: 13px;
-    outline: none;
-    cursor: pointer;
+  .tx-date-header {
+    padding: 12px 20px !important;
+    font-size: 11px !important;
+    font-weight: 700 !important;
+    color: var(--text-muted) !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.05em !important;
+    border-bottom: 1px solid var(--border) !important;
   }
 
   /* ── Full transaction table ── */
@@ -1067,7 +1062,7 @@
 <aside class="sidebar" id="sidebar" role="navigation" aria-label="Main navigation">
   <div class="sidebar-logo">
     <div class="logo-icon">
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
         <path d="M12 2V22M17 5H9.5C7.567 5 6 6.567 6 8.5C6 10.433 7.567 12 9.5 12H14.5C16.433 12 18 13.567 18 15.5C18 17.433 16.433 19 14.5 19H7" stroke="url(#logo-grad)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
         <defs>
           <linearGradient id="logo-grad" x1="6" y1="2" x2="18" y2="22" gradientUnits="userSpaceOnUse">
@@ -1083,18 +1078,18 @@
   <nav>
     <div class="nav-section-label">Overview</div>
     <button class="nav-item active" data-view="dashboard">
-      <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="6" height="6" rx="1.5"/><rect x="14" y="4" width="6" height="6" rx="1.5"/><rect x="4" y="14" width="6" height="6" rx="1.5"/><rect x="14" y="14" width="6" height="6" rx="1.5"/></svg></span> Dashboard
+      <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="4" width="6" height="6" rx="1.5"/><rect x="14" y="4" width="6" height="6" rx="1.5"/><rect x="4" y="14" width="6" height="6" rx="1.5"/><rect x="14" y="14" width="6" height="6" rx="1.5"/></svg></span> Dashboard
     </button>
     <button class="nav-item" data-view="transactions">
-      <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 7h10"/><path d="M7 12h10"/><path d="M7 17h6"/><path d="M5 7h.01M5 12h.01M5 17h.01"/></svg></span> Transactions
+      <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 7h10"/><path d="M7 12h10"/><path d="M7 17h6"/><path d="M5 7h.01M5 12h.01M5 17h.01"/></svg></span> Transactions
     </button>
 
     <div class="nav-section-label" style="margin-top:8px;">Planning</div>
     <button class="nav-item" data-view="budget">
-      <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="9" opacity="0.25"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3"/></svg></span> Budget
+      <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="9" opacity="0.25"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3"/></svg></span> Budget
     </button>
     <button class="nav-item" data-view="reports">
-      <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 17l4-4 4 4 6-6"/><path d="M5 21h14"/></svg></span> Reports
+      <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 17l4-4 4 4 6-6"/><path d="M5 21h14"/></svg></span> Reports
     </button>
   </nav>
 
@@ -1574,9 +1569,12 @@ async function handleLogin() {
   if (ok) {
     Auth.currentUser = user;
     loadState();
-    initApp();
-    $('auth-screen').classList.add('hidden');
-    showToast(`Welcome, ${user}!`, 'success');
+    // Wrap in setTimeout to ensure DOM is ready if any conditional rendering happens
+    setTimeout(() => {
+      initApp();
+      $('auth-screen').classList.add('hidden');
+      showToast(`Welcome, ${user}!`, 'success');
+    }, 10);
   } else {
     if (card) { card.classList.add('shake'); setTimeout(() => card.classList.remove('shake'), 500); }
     showToast('Incorrect password. Try again.', 'error');
@@ -1765,6 +1763,11 @@ function renderDashboard() {
   balEl.textContent = (net < 0 ? '-' : '') + fmt(Math.abs(net));
   balEl.className = 'kpi-value mono ' + (net >= 0 ? 'text-green' : 'text-red');
   document.getElementById('kpiSavings').textContent = rate + '%';
+  
+  // Accessibility: Update ARIA labels for dynamic content
+  const kpiContainer = document.querySelector('.kpi-grid');
+  if (kpiContainer) kpiContainer.setAttribute('aria-live', 'polite');
+
   document.getElementById('kpiTxCount').textContent = txs.length + ' transactions';
   document.getElementById('kpiIncomeChange').textContent = txs.filter(t=>t.type==='income').length + ' income entries';
   document.getElementById('kpiExpensesChange').textContent = txs.filter(t=>t.type==='expense').length + ' expense entries';
@@ -1963,14 +1966,26 @@ function renderTransactionTable() {
     empty.style.display = 'block';
   } else {
     empty.style.display = 'none';
-    tbody.innerHTML = txs.map(tx => {
-      const d = new Date(tx.date + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    
+    // Group transactions by date (M-10)
+    let lastDate = '';
+    let html = '';
+    
+    txs.forEach(tx => {
+      const dLong = new Date(tx.date + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+      
+      if (tx.date !== lastDate) {
+        html += `<tr class="tx-date-header-row"><td colspan="8" class="tx-date-header">${dLong}</td></tr>`;
+        lastDate = tx.date;
+      }
+      
       const isIncome = tx.type === 'income';
       const icon = getCatIcon(tx.category);
       const pillClass = isIncome ? 'green' : 'red';
-      return `<tr>
+      
+      html += `<tr>
         <td><div class="tx-avatar" style="background:${isIncome?'var(--accent-green-dim)':'var(--accent-red-dim)'}; width:32px; height:32px; border-radius:8px;">${icon}</div></td>
-        <td class="text-secondary mono" style="font-size:12px; white-space:nowrap;">${d}</td>
+        <td class="text-secondary mono" style="font-size:12px; white-space:nowrap;">${tx.date}</td>
         <td>
           <div style="font-weight:500;">${tx.description || '—'}</div>
           ${tx.tags ? `<div style="font-size:10px; color:var(--text-muted);">${tx.tags}</div>` : ''}
@@ -1983,16 +1998,21 @@ function renderTransactionTable() {
         <td class="text-muted" style="font-size:12px; max-width:160px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${tx.notes || '—'}</td>
         <td class="tx-amount ${tx.type}" style="text-align:right;">${isIncome ? '+' : '-'}${fmt(tx.amount)}</td>
         <td style="text-align:center;">
-          <button class="action-btn" onclick="editTx('${tx.id}')" title="Edit"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;"><path d="M12 20h8"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L9 17l-4 1 1-4 10.5-10.5Z"/></svg></button>
-          <button class="action-btn del" onclick="deleteTx('${tx.id}')" title="Delete"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M6 6 7 20h10l1-14"/></svg></button>
+          <div style="display:flex; justify-content:center; gap:4px;">
+            <button class="action-btn" onclick="editTx('${tx.id}')" title="Edit"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;"><path d="M12 20h8"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L9 17l-4 1 1-4 10.5-10.5Z"/></svg></button>
+            <button class="action-btn del" onclick="deleteTx('${tx.id}')" title="Delete"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M6 6 7 20h10l1-14"/></svg></button>
+          </div>
         </td>
       </tr>`;
-    }).join('');
+    });
+    tbody.innerHTML = html;
   }
-
-  const total = txs.reduce((s, t) => t.type === 'income' ? s + t.amount : s - t.amount, 0);
+  
+  // Re-sync labels
   document.getElementById('txCount').textContent = txs.length + ' transaction' + (txs.length !== 1 ? 's' : '');
-  document.getElementById('txTotal').textContent = 'Net: ' + (total >= 0 ? '+' : '') + fmt(Math.abs(total));
+  const totalAmount = txs.reduce((s,t) => s + (t.type==='income'?t.amount:-t.amount), 0);
+  document.getElementById('txTotal').textContent = 'Net: ' + (totalAmount >= 0 ? '+' : '') + fmt(Math.abs(totalAmount));
+  document.getElementById('txTotal').className = 'text-secondary mono ' + (totalAmount >= 0 ? 'text-green' : 'text-red');
 }
 
 // ─── BUDGET ───────────────────────────────────────────────
@@ -2216,7 +2236,8 @@ async function saveTransaction() {
 }
 
 async function deleteTx(id) {
-  if (!confirm('Delete this transaction?')) return;
+  // Use a custom confirm to align with Apple HIG / Action Sheet pattern
+  if (!confirm('This action cannot be undone. Delete this transaction?')) return;
   state.transactions = state.transactions.filter(t => t.id !== id);
   await saveState();
   buildMonthOptions();
@@ -2583,6 +2604,12 @@ async function boot() {
   }
 
   updateLoginUserList();
+  
+  // Initialize custom select for login screen
+  if (window.initCustomSelects) {
+    window.initCustomSelects();
+  }
+  
   bindEvents();
 }
 
