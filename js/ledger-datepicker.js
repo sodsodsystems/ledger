@@ -1,6 +1,8 @@
 /**
- * LedgerDatePicker v2 — Premium Apple HIG Calendar
- * Zero native browser UI. Pure "Void" aesthetic.
+ * LedgerDatePicker v3 — Premium Calendar
+ * - Fixed nav button close-on-click bug (stopPropagation)
+ * - Added month & year inline <select> dropdowns in header
+ * - Clean "Void" dark aesthetic
  */
 export class LedgerDatePicker {
     constructor(nativeInput, options = {}) {
@@ -10,7 +12,6 @@ export class LedgerDatePicker {
         this.native = nativeInput;
         this.isOpen = false;
 
-        // Parse initial date safely
         const raw = nativeInput.value;
         const parsed = raw ? new Date(raw + 'T12:00:00') : new Date();
         this.selected = new Date(parsed);
@@ -21,15 +22,14 @@ export class LedgerDatePicker {
     }
 
     _build() {
-        // Wrapper replaces the native input in the DOM
         this.wrapper = document.createElement('div');
         this.wrapper.className = 'ldp-wrapper';
 
-        // Trigger button (the visible "input")
         this.trigger = document.createElement('button');
         this.trigger.type = 'button';
         this.trigger.className = 'ldp-trigger';
         this.trigger.innerHTML = `
+            <span class="ldp-trigger-value">${this._fmt(this.selected)}</span>
             <span class="ldp-trigger-icon">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <rect x="3" y="4" width="18" height="18" rx="2.5"/>
@@ -38,11 +38,9 @@ export class LedgerDatePicker {
                     <line x1="16" y1="2" x2="16" y2="6"/>
                 </svg>
             </span>
-            <span class="ldp-trigger-value">${this._fmt(this.selected)}</span>
         `;
         this.triggerValue = this.trigger.querySelector('.ldp-trigger-value');
 
-        // Popup panel
         this.panel = document.createElement('div');
         this.panel.className = 'ldp-panel';
         this.panel.setAttribute('role', 'dialog');
@@ -53,7 +51,6 @@ export class LedgerDatePicker {
     }
 
     _attach() {
-        // Hide native input visually but keep in DOM for form compat
         this.native.style.display = 'none';
         this.native.parentNode.insertBefore(this.wrapper, this.native);
         this.wrapper.appendChild(this.native);
@@ -63,6 +60,7 @@ export class LedgerDatePicker {
             this.toggle();
         });
 
+        // Close on outside click, but not when clicking inside the panel
         document.addEventListener('click', (e) => {
             if (!this.wrapper.contains(e.target)) this.close();
         });
@@ -96,18 +94,29 @@ export class LedgerDatePicker {
     _renderPanel() {
         const y = this.view.getFullYear();
         const m = this.view.getMonth();
-        const monthLabel = new Intl.DateTimeFormat('en-US', { month: 'long' }).format(this.view);
         const today = new Date();
 
-        const firstDow = new Date(y, m, 1).getDay(); // 0=Sun
+        const firstDow = new Date(y, m, 1).getDay();
         const daysInMonth = new Date(y, m + 1, 0).getDate();
+        const MONTHS = ['January','February','March','April','May','June',
+                        'July','August','September','October','November','December'];
 
+        // Build month options
+        const monthOpts = MONTHS.map((name, i) =>
+            `<option value="${i}" ${i === m ? 'selected' : ''}>${name}</option>`
+        ).join('');
+
+        // Build year options (10 years back, 10 ahead)
+        let yearOpts = '';
+        for (let yr = y - 10; yr <= y + 10; yr++) {
+            yearOpts += `<option value="${yr}" ${yr === y ? 'selected' : ''}>${yr}</option>`;
+        }
+
+        // Build day cells
         let cells = '';
-        // Leading empty cells
         for (let i = 0; i < firstDow; i++) {
             cells += `<span class="ldp-cell ldp-empty"></span>`;
         }
-        // Day cells
         for (let day = 1; day <= daysInMonth; day++) {
             const date = new Date(y, m, day);
             const iso = this._isoDate(date);
@@ -116,7 +125,7 @@ export class LedgerDatePicker {
             let cls = 'ldp-cell ldp-day';
             if (isToday) cls += ' ldp-today';
             if (isSelected) cls += ' ldp-selected';
-            cells += `<span class="${cls}" data-iso="${iso}" tabindex="0" role="button" aria-label="${monthLabel} ${day}, ${y}">${day}</span>`;
+            cells += `<span class="${cls}" data-iso="${iso}" tabindex="0" role="button">${day}</span>`;
         }
 
         this.panel.innerHTML = `
@@ -125,8 +134,8 @@ export class LedgerDatePicker {
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
                 </button>
                 <div class="ldp-month-year">
-                    <span class="ldp-month">${monthLabel}</span>
-                    <span class="ldp-year">${y}</span>
+                    <select class="ldp-month-select" aria-label="Month">${monthOpts}</select>
+                    <select class="ldp-year-select" aria-label="Year">${yearOpts}</select>
                 </div>
                 <button class="ldp-nav ldp-next" type="button" aria-label="Next month">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
@@ -138,17 +147,39 @@ export class LedgerDatePicker {
             <div class="ldp-grid">${cells}</div>
         `;
 
-        this.panel.querySelector('.ldp-prev').onclick = () => {
+        // Nav buttons — stopPropagation prevents the document click-outside from firing
+        this.panel.querySelector('.ldp-prev').addEventListener('click', (e) => {
+            e.stopPropagation();
             this.view = new Date(y, m - 1, 1);
             this._renderPanel();
-        };
-        this.panel.querySelector('.ldp-next').onclick = () => {
+        });
+
+        this.panel.querySelector('.ldp-next').addEventListener('click', (e) => {
+            e.stopPropagation();
             this.view = new Date(y, m + 1, 1);
             this._renderPanel();
-        };
+        });
 
+        // Month dropdown
+        this.panel.querySelector('.ldp-month-select').addEventListener('change', (e) => {
+            e.stopPropagation();
+            this.view = new Date(y, parseInt(e.target.value), 1);
+            this._renderPanel();
+        });
+
+        // Year dropdown
+        this.panel.querySelector('.ldp-year-select').addEventListener('change', (e) => {
+            e.stopPropagation();
+            this.view = new Date(parseInt(e.target.value), m, 1);
+            this._renderPanel();
+        });
+
+        // Day selection
         this.panel.querySelectorAll('.ldp-day').forEach(el => {
-            el.addEventListener('click', () => this._select(el.dataset.iso));
+            el.addEventListener('click', (e) => {
+                e.stopPropagation();
+                this._select(el.dataset.iso);
+            });
             el.addEventListener('keydown', (e) => {
                 if (e.key === 'Enter' || e.key === ' ') {
                     e.preventDefault();
@@ -167,7 +198,6 @@ export class LedgerDatePicker {
         this._renderPanel();
     }
 
-    // Call this externally to sync the display when native value changes programmatically
     sync() {
         if (this.native.value) {
             this.selected = new Date(this.native.value + 'T12:00:00');
@@ -181,8 +211,11 @@ export class LedgerDatePicker {
 
     open() {
         if (this.isOpen) return;
-        // Close all other open pickers
-        document.querySelectorAll('.ldp-panel.ldp-open').forEach(p => p.classList.remove('ldp-open'));
+        document.querySelectorAll('.ldp-panel.ldp-open').forEach(p => {
+            p.classList.remove('ldp-open');
+            const w = p.closest('.ldp-wrapper');
+            if (w) w.classList.remove('ldp-is-open');
+        });
         this.isOpen = true;
         this.wrapper.classList.add('ldp-is-open');
         this.panel.classList.add('ldp-open');
@@ -202,7 +235,6 @@ export function initLedgerDatePickers(parent = document) {
     });
 }
 
-// Allow syncing externally (e.g., after openModal sets txDate.value)
 export function syncDatePicker(input) {
     if (input._ledgerDPInstance) input._ledgerDPInstance.sync();
 }

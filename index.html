@@ -1259,23 +1259,48 @@
   .ldp-month-year {
     display: flex;
     align-items: center;
-    gap: 5px;
+    gap: 4px;
   }
 
-  .ldp-month {
-    font-size: 15px;
-    font-weight: 800;
+  .ldp-month-select,
+  .ldp-year-select {
+    appearance: none;
+    -webkit-appearance: none;
+    background: rgba(255,255,255,0.07);
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 8px;
     color: var(--accent-blue);
+    font-size: 13px;
+    font-weight: 700;
+    font-family: inherit;
+    cursor: pointer;
+    padding: 4px 8px;
+    letter-spacing: 0.02em;
     text-transform: uppercase;
-    letter-spacing: 0.04em;
+    outline: none;
+    transition: background 0.15s, border-color 0.15s;
   }
 
-  .ldp-year {
-    font-size: 15px;
-    font-weight: 800;
-    color: var(--accent-blue);
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
+  .ldp-month-select {
+    min-width: 96px;
+  }
+
+  .ldp-year-select {
+    min-width: 60px;
+  }
+
+  .ldp-month-select:hover,
+  .ldp-year-select:hover {
+    background: rgba(0,122,255,0.12);
+    border-color: rgba(0,122,255,0.4);
+  }
+
+  .ldp-month-select option,
+  .ldp-year-select option {
+    background: #1c1c1e;
+    color: #ffffff;
+    font-size: 13px;
+    text-transform: capitalize;
   }
 
   .ldp-nav {
