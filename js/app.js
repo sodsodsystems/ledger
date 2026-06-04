@@ -1,6 +1,7 @@
 import { Auth } from './auth.js';
 import { DB } from './db.js';
 import { initCustomSelects } from './custom-select.js';
+import { initLedgerDatePickers } from './ledger-datepicker.js';
 
 // ═══════════════════════════════════════════════════════════
 //  CONSTANTS & CATEGORIES
@@ -122,6 +123,7 @@ function initApp() {
   
   // Initialize custom dropdowns
   initCustomSelects();
+  initLedgerDatePickers();
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -205,6 +207,7 @@ window.navigate = (viewId) => {
   
   // Re-sync custom selects for the view
   initCustomSelects();
+  initLedgerDatePickers();
 };
 
 function updateGreeting() {
@@ -588,6 +591,7 @@ window.openModal = (id = null) => {
 
     // Ensure custom selects are initialized in modal
     initCustomSelects($('txModal'));
+    initLedgerDatePickers($('txModal'));
 };
 
 window.editTx = (id) => openModal(id);
