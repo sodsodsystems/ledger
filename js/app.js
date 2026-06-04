@@ -589,9 +589,10 @@ window.openModal = (id = null) => {
         $('advancedToggle').textContent = '+ Advanced Options';
     }
 
-    // Ensure custom selects are initialized in modal
+    // Ensure custom selects and date picker are initialized and synced in modal
     initCustomSelects($('txModal'));
     initLedgerDatePickers($('txModal'));
+    if (window.syncDatePicker) window.syncDatePicker($('txDate'));
 };
 
 window.editTx = (id) => openModal(id);
