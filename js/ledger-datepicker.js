@@ -133,7 +133,7 @@ export class LedgerDatePicker {
                 </button>
             </div>
             <div class="ldp-weekdays">
-                ${['S','M','T','W','T','F','S'].map(d => `<span>${d}</span>`).join('')}
+                ${['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].map(d => `<span>${d}</span>`).join('')}
             </div>
             <div class="ldp-grid">${cells}</div>
         `;
