@@ -829,23 +829,7 @@ select.filter-select:focus { border-color: var(--accent-blue); }
 /* ══════════════════════════════════════════════════════════
    TOAST
    ══════════════════════════════════════════════════════════ */
-.toast {
-  position: fixed; bottom: 24px; right: 24px;
-  background: var(--bg-surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  padding: 14px 20px;
-  font-size: 14px; font-weight: 500;
-  display: inline-flex; align-items: center; gap: 10px;
-  z-index: 999;
-  transform: translateY(80px); opacity: 0;
-  transition: all 0.3s var(--ease-spring);
-  box-shadow: var(--shadow-modal);
-}
-.toast.show    { transform: translateY(0); opacity: 1; }
-.toast.success { color: var(--accent-green); border-left: 3px solid var(--accent-green); }
-.toast.error   { color: var(--accent-red);   border-left: 3px solid var(--accent-red);   }
-.toast::before { content: ''; width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
+/* Toast moved to end of file for consistency */
 
 /* ══════════════════════════════════════════════════════════
    ACTION BUTTONS
@@ -926,7 +910,7 @@ select.filter-select:focus { border-color: var(--accent-blue); }
   .form-grid       { grid-template-columns: 1fr; }
   .modal           { width: 96vw; padding: 20px; border-radius: var(--radius-lg) var(--radius-lg) 0 0; align-self: flex-end; }
   .modal-overlay   { align-items: flex-end; }
-  .toast           { bottom: calc(var(--tab-h) + 12px); right: 12px; left: 12px; justify-content: flex-start; }
+  .toast           { display: none !important; } /* Overridden by global styles */
 
   /* Responsive TX table → cards (mobile) */
   .tx-table        { display: block; border: none; background: transparent; box-shadow: none; }
