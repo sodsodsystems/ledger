@@ -5,6 +5,8 @@
  * - Left/right nav buttons fixed (stopPropagation).
  * - Inline month/year <select> dropdowns.
  */
+import { LedgerCustomSelect } from './custom-select.js';
+
 export class LedgerDatePicker {
     constructor(nativeInput) {
         if (!nativeInput || nativeInput._ledgerDPInstance) return;
@@ -169,9 +171,9 @@ export class LedgerDatePicker {
             `<option value="${i}" ${i === m ? 'selected' : ''}>${name}</option>`
         ).join('');
 
-        // Build year options (wider range, more focused)
+        // Build year options (5 years back, 5 ahead)
         let yearOpts = '';
-        for (let yr = y - 20; yr <= y + 20; yr++) {
+        for (let yr = y - 5; yr <= y + 5; yr++) {
             yearOpts += `<option value="${yr}" ${yr === y ? 'selected' : ''}>${yr}</option>`;
         }
 
@@ -256,6 +258,20 @@ export class LedgerDatePicker {
                 }
             });
         });
+
+        // Initialize custom selects for the header dropdowns
+        const mSelect = this.panel.querySelector('.ldp-month-select');
+        const ySelect = this.panel.querySelector('.ldp-year-select');
+        
+        if (mSelect) {
+            new LedgerCustomSelect(mSelect);
+            // Ensure the custom select container doesn't close the LDP
+            mSelect.closest('.ledger-select-container').addEventListener('click', e => e.stopPropagation());
+        }
+        if (ySelect) {
+            new LedgerCustomSelect(ySelect);
+            ySelect.closest('.ledger-select-container').addEventListener('click', e => e.stopPropagation());
+        }
     }
 
     _select(iso) {

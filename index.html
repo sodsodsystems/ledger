@@ -1270,70 +1270,49 @@
   .ldp-month-year {
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 8px;
+    flex: 1;
+    justify-content: center;
   }
 
-  .ldp-select-wrap {
-    position: relative;
-    display: flex;
-    align-items: center;
+  /* Overrides for LedgerCustomSelect when nested in DatePicker Header */
+  .ldp-header .ledger-select-container {
+    min-width: unset;
+    width: auto;
   }
 
-  .ldp-month-select,
-  .ldp-year-select {
-    appearance: none;
-    -webkit-appearance: none;
+  .ldp-header .ledger-select-trigger {
+    height: 32px;
+    min-height: 32px;
+    padding: 0 10px;
     background: rgba(255,255,255,0.06);
     border: 1px solid rgba(255,255,255,0.1);
     border-radius: 8px;
-    color: var(--accent-blue);
     font-size: 12px;
     font-weight: 700;
-    font-family: inherit;
-    cursor: pointer;
-    padding: 5px 24px 5px 10px;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
-    outline: none;
-    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
-  .ldp-month-select {
-    width: 76px;
-  }
-
-  .ldp-year-select {
-    width: 78px;
-  }
-
-  .ldp-month-select:hover,
-  .ldp-year-select:hover {
+  .ldp-header .ledger-select-trigger:hover {
     background: rgba(0,122,255,0.1);
     border-color: rgba(0,122,255,0.3);
-    color: #fff;
   }
 
-  .ldp-select-icon {
-    position: absolute;
-    right: 8px;
+  .ldp-header .ledger-select-text {
+    color: var(--accent-blue);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  .ldp-header .ledger-select-arrow {
     width: 10px;
     height: 10px;
     color: var(--accent-blue);
-    pointer-events: none;
-    transition: transform 0.2s;
   }
 
-  .ldp-select-wrap:hover .ldp-select-icon {
-    color: #fff;
-    transform: translateY(1px);
-  }
-
-  .ldp-month-select option,
-  .ldp-year-select option {
-    background: #1c1c1e;
-    color: #ffffff;
-    font-size: 13px;
-    text-transform: capitalize;
+  .ldp-header .ledger-select-menu {
+    border-radius: 10px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    max-height: 200px;
   }
 
   .ldp-nav {
