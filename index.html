@@ -1167,53 +1167,64 @@
     width: 100%;
   }
 
-  .ldp-trigger {
+  .ldp-trigger-row {
     width: 100%;
     height: 44px;
-    padding: 0 14px;
     background: var(--bg-input);
     border: 1px solid var(--border);
     border-radius: var(--radius-sm);
     display: flex;
     align-items: center;
-    gap: 10px;
-    cursor: pointer;
-    transition: border-color 0.2s, background 0.2s;
-    text-align: left;
-    font-family: inherit;
+    transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
+    overflow: hidden;
   }
 
-  .ldp-trigger:hover {
+  .ldp-trigger-row:hover {
     border-color: var(--border-hover);
     background: var(--bg-card-hover);
   }
 
-  .ldp-is-open .ldp-trigger {
+  .ldp-is-open .ldp-trigger-row,
+  .ldp-trigger-row:focus-within {
     border-color: var(--accent-blue);
     box-shadow: 0 0 0 3px rgba(0,122,255,0.18);
   }
 
-  .ldp-trigger-icon {
-    display: flex;
-    align-items: center;
-    color: var(--text-muted);
-    flex-shrink: 0;
-    order: 2;
-    margin-left: auto;
-  }
-
-  .ldp-trigger-icon svg {
-    width: 16px;
-    height: 16px;
-  }
-
-  .ldp-trigger-value {
+  .ldp-text-input {
+    flex: 1;
+    height: 100%;
+    background: transparent;
+    border: none;
+    padding: 0 14px;
+    color: var(--text-primary);
     font-size: 14px;
     font-weight: 500;
+    font-family: inherit;
+    outline: none;
+  }
+
+  .ldp-icon-btn {
+    width: 44px;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: none;
+    border-left: 1px solid var(--border);
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s;
+  }
+
+  .ldp-icon-btn:hover {
+    background: rgba(255,255,255,0.05);
     color: var(--text-primary);
-    letter-spacing: 0.02em;
-    font-variant-numeric: tabular-nums;
-    order: 1;
+  }
+
+  .ldp-icon-btn svg {
+    width: 18px;
+    height: 18px;
   }
 
   /* Panel */
