@@ -204,11 +204,9 @@ export class LedgerDatePicker {
                 <div class="ldp-month-year">
                     <div class="ldp-select-wrap">
                         <select class="ldp-month-select" aria-label="Month">${monthOpts}</select>
-                        <svg class="ldp-select-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
                     </div>
                     <div class="ldp-select-wrap">
                         <select class="ldp-year-select" aria-label="Year">${yearOpts}</select>
-                        <svg class="ldp-select-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
                     </div>
                 </div>
                 <button class="ldp-nav ldp-next" type="button" aria-label="Next month">
