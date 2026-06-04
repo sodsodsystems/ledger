@@ -1,5 +1,6 @@
 import { Auth } from './auth.js';
 import { DB } from './db.js';
+import { initCustomSelects } from './custom-select.js';
 
 // ═══════════════════════════════════════════════════════════
 //  CONSTANTS & CATEGORIES
@@ -118,6 +119,11 @@ function initApp() {
   navigate('dashboard');
   bindEvents();
   populateCatSelect('expense');
+  
+  // Initialize custom dropdowns
+  setTimeout(() => {
+    initCustomSelects();
+  }, 100);
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -471,12 +477,14 @@ function buildMonthOptions() {
   const set = new Set(state.transactions.map(t => t.date.slice(0, 7)));
   const sorted = [...set].sort().reverse();
   $('filterMonth').innerHTML = '<option value="all">All Time</option>' + sorted.map(m => `<option value="${m}">${m}</option>`).join('');
+  $('filterMonth').dispatchEvent(new Event('change', { bubbles: true }));
 }
 
 function populateCatSelect(type) {
     const allCats = getAllCategories()[type];
     const cats = Object.keys(allCats);
     $('txCat').innerHTML = cats.map(c => `<option value="${c}">${c}</option>`).join('');
+    $('txCat').dispatchEvent(new Event('change', { bubbles: true }));
     updateSubcats();
 }
 
@@ -486,6 +494,7 @@ function updateSubcats() {
     const allCats = getAllCategories()[type];
     const subs = allCats[cat] || [];
     $('txSubcat').innerHTML = subs.map(s => `<option value="${s}">${s}</option>`).join('');
+    $('txSubcat').dispatchEvent(new Event('change', { bubbles: true }));
 }
 
 window.handleAddCategory = async () => {
@@ -550,9 +559,12 @@ window.openModal = (id = null) => {
             $('txAmount').value = tx.amount;
             $('txDesc').value = tx.description || '';
             $('txCat').value = tx.category;
+            $('txCat').dispatchEvent(new Event('change', { bubbles: true }));
             updateSubcats();
             $('txSubcat').value = tx.subcategory || '';
+            $('txSubcat').dispatchEvent(new Event('change', { bubbles: true }));
             $('txPayment').value = tx.payment_method || 'Cash';
+            $('txPayment').dispatchEvent(new Event('change', { bubbles: true }));
             $('txNotes').value = tx.notes || '';
             $('txTags').value = tx.tags || '';
             
