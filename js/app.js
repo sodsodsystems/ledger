@@ -121,9 +121,7 @@ function initApp() {
   populateCatSelect('expense');
   
   // Initialize custom dropdowns
-  setTimeout(() => {
-    initCustomSelects();
-  }, 100);
+  initCustomSelects();
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -204,6 +202,9 @@ window.navigate = (viewId) => {
 
   if (viewId === 'dashboard') updateGreeting();
   renderView(viewId);
+  
+  // Re-sync custom selects for the view
+  initCustomSelects();
 };
 
 function updateGreeting() {
@@ -584,6 +585,9 @@ window.openModal = (id = null) => {
         $('advancedFields').style.display = 'none';
         $('advancedToggle').textContent = '+ Advanced Options';
     }
+
+    // Ensure custom selects are initialized in modal
+    initCustomSelects($('txModal'));
 };
 
 window.editTx = (id) => openModal(id);

@@ -5,9 +5,13 @@
 export class LedgerCustomSelect {
     constructor(selectElement, options = {}) {
         if (!selectElement || selectElement.tagName !== 'SELECT') {
-            console.error('LedgerCustomSelect: Element must be a SELECT tag', selectElement);
             return;
         }
+
+        if (selectElement.dataset.ledgerSelectInitialized) return;
+        selectElement.dataset.ledgerSelectInitialized = "true";
+
+        console.log('LedgerCustomSelect: Initializing for', selectElement.id || 'unnamed select');
 
         this.nativeSelect = selectElement;
         this.options = {
@@ -218,10 +222,15 @@ export class LedgerCustomSelect {
 
 // Global helper to initialize all selects
 export function initCustomSelects(parent = document) {
-    const selects = parent.querySelectorAll('select:not(.ledger-native-hidden)');
+    console.log('LedgerCustomSelect: initCustomSelects called on', parent);
+    const selects = parent.querySelectorAll('select:not([data-ledger-select-initialized])');
     const instances = [];
     selects.forEach(s => {
-        instances.push(new LedgerCustomSelect(s));
+        try {
+            instances.push(new LedgerCustomSelect(s));
+        } catch (e) {
+            console.error('LedgerCustomSelect: Failed to initialize for', s, e);
+        }
     });
     return instances;
 }
