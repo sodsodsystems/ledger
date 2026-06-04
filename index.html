@@ -2987,6 +2987,16 @@ function initApp() {
   
   // Initialize custom dropdowns
   initCustomSelects();
+
+  // Initialize custom date pickers (module may load async, so retry if not ready)
+  function tryInitDatePickers() {
+    if (window.initLedgerDatePickers) {
+      window.initLedgerDatePickers(document);
+    } else {
+      setTimeout(tryInitDatePickers, 50);
+    }
+  }
+  tryInitDatePickers();
 }
 
 async function boot() {

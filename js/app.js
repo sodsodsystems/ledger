@@ -590,8 +590,8 @@ window.openModal = (id = null) => {
     }
 
     // Ensure custom selects and date picker are initialized and synced in modal
-    initCustomSelects($('txModal'));
-    initLedgerDatePickers($('txModal'));
+    if (window.initCustomSelects) window.initCustomSelects($('txModal'));
+    if (window.initLedgerDatePickers) window.initLedgerDatePickers($('txModal'));
     if (window.syncDatePicker) window.syncDatePicker($('txDate'));
 };
 
