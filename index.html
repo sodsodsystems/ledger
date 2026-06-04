@@ -869,37 +869,45 @@
     letter-spacing: -0.02em;
   }
 
-  /* ── Toast ── */
+  /* ── Toast Notification ── */
   .toast {
     position: fixed;
-    bottom: 24px; right: 24px;
-    background: rgba(44,44,46,0.98);
-    border: 1px solid var(--border-hover);
-    border-radius: var(--radius-md);
-    padding: 14px 20px;
+    bottom: 32px;
+    right: 32px;
+    background: rgba(28,28,30,0.9);
+    backdrop-filter: blur(20px) saturate(2);
+    -webkit-backdrop-filter: blur(20px) saturate(2);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 12px;
+    padding: 12px 18px;
     font-size: 13px;
-    font-weight: 500;
-    display: inline-flex;
+    font-weight: 600;
+    color: #FFFFFF;
+    display: flex;
     align-items: center;
     gap: 10px;
-    z-index: 999;
-    transform: translateY(80px);
+    z-index: 10000;
+    transform: translateY(20px);
     opacity: 0;
-    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-    box-shadow: var(--shadow-lg);
-    backdrop-filter: blur(16px);
-  }
-
-  .toast::before {
-    content: '';
-    width: 8px; height: 8px;
-    border-radius: 50%;
-    background: currentColor;
+    pointer-events: none;
+    transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    box-shadow: 0 12px 40px rgba(0,0,0,0.5);
+    max-width: 320px;
   }
 
   .toast.show { transform: translateY(0); opacity: 1; }
-  .toast.success { color: var(--accent-green); border-left: 3px solid var(--accent-green); }
-  .toast.error { color: var(--accent-red); border-left: 3px solid var(--accent-red); }
+
+  .toast::before {
+    content: '';
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--accent-blue);
+    flex-shrink: 0;
+  }
+
+  .toast.success::before { background: var(--accent-green); }
+  .toast.error::before { background: var(--accent-red); }
+  .toast.error { border-color: rgba(255,69,58,0.25); }
 
   /* ── LedgerDatePicker ── */
   .ledger-datepicker-container {
