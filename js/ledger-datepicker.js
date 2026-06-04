@@ -162,23 +162,27 @@ export class LedgerDatePicker {
         const y = this.view.getFullYear();
         const m = this.view.getMonth();
         const today = new Date();
-        const MONTHS = ['January','February','March','April','May','June',
-                        'July','August','September','October','November','December'];
+        const MONTHS = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
 
+        // Build month options
         const monthOpts = MONTHS.map((name, i) =>
             `<option value="${i}" ${i === m ? 'selected' : ''}>${name}</option>`
         ).join('');
 
+        // Build year options (wider range, more focused)
         let yearOpts = '';
-        for (let yr = y - 10; yr <= y + 10; yr++) {
+        for (let yr = y - 20; yr <= y + 20; yr++) {
             yearOpts += `<option value="${yr}" ${yr === y ? 'selected' : ''}>${yr}</option>`;
         }
 
         const firstDow   = new Date(y, m, 1).getDay();
         const daysInMonth = new Date(y, m + 1, 0).getDate();
 
+        // Build day cells
         let cells = '';
-        for (let i = 0; i < firstDow; i++) cells += `<span class="ldp-cell ldp-empty"></span>`;
+        for (let i = 0; i < firstDow; i++) {
+            cells += `<span class="ldp-cell ldp-empty"></span>`;
+        }
         for (let day = 1; day <= daysInMonth; day++) {
             const date = new Date(y, m, day);
             const iso  = this._isoDate(date);
@@ -193,16 +197,20 @@ export class LedgerDatePicker {
         this.panel.innerHTML = `
             <div class="ldp-header">
                 <button class="ldp-nav ldp-prev" type="button" aria-label="Previous month">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-                         stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
                 </button>
                 <div class="ldp-month-year">
-                    <select class="ldp-month-select" aria-label="Month">${monthOpts}</select>
-                    <select class="ldp-year-select"  aria-label="Year">${yearOpts}</select>
+                    <div class="ldp-select-wrap">
+                        <select class="ldp-month-select" aria-label="Month">${monthOpts}</select>
+                        <svg class="ldp-select-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                    </div>
+                    <div class="ldp-select-wrap">
+                        <select class="ldp-year-select" aria-label="Year">${yearOpts}</select>
+                        <svg class="ldp-select-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                    </div>
                 </div>
                 <button class="ldp-nav ldp-next" type="button" aria-label="Next month">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-                         stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
                 </button>
             </div>
             <div class="ldp-weekdays">

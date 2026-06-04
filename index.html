@@ -1270,40 +1270,62 @@
   .ldp-month-year {
     display: flex;
     align-items: center;
-    gap: 4px;
+    gap: 6px;
+  }
+
+  .ldp-select-wrap {
+    position: relative;
+    display: flex;
+    align-items: center;
   }
 
   .ldp-month-select,
   .ldp-year-select {
     appearance: none;
     -webkit-appearance: none;
-    background: rgba(255,255,255,0.07);
-    border: 1px solid rgba(255,255,255,0.12);
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.1);
     border-radius: 8px;
     color: var(--accent-blue);
-    font-size: 13px;
+    font-size: 12px;
     font-weight: 700;
     font-family: inherit;
     cursor: pointer;
-    padding: 4px 8px;
-    letter-spacing: 0.02em;
+    padding: 5px 24px 5px 10px;
+    letter-spacing: 0.04em;
     text-transform: uppercase;
     outline: none;
-    transition: background 0.15s, border-color 0.15s;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   .ldp-month-select {
-    min-width: 96px;
+    width: 76px;
   }
 
   .ldp-year-select {
-    min-width: 60px;
+    width: 78px;
   }
 
   .ldp-month-select:hover,
   .ldp-year-select:hover {
-    background: rgba(0,122,255,0.12);
-    border-color: rgba(0,122,255,0.4);
+    background: rgba(0,122,255,0.1);
+    border-color: rgba(0,122,255,0.3);
+    color: #fff;
+  }
+
+  .ldp-select-icon {
+    position: absolute;
+    right: 8px;
+    width: 10px;
+    height: 10px;
+    color: var(--accent-blue);
+    pointer-events: none;
+    transition: transform 0.2s;
+  }
+
+  .ldp-select-wrap:hover .ldp-select-icon {
+    color: #fff;
+    transform: translateY(1px);
   }
 
   .ldp-month-select option,
